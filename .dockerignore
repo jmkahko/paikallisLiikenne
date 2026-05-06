@@ -1,0 +1,29 @@
+# Älä kopioi näitä build-kontekstiin → nopeampi build, ei vuotoja imageen.
+node_modules
+dist
+dist-ssr
+
+# Salaisuudet: avain välitetään build-args-kautta, ei imageen.
+.env
+.env.local
+.env.*.local
+
+# Versionhallinta ja editori
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Logit ja temp-tiedostot
+*.log
+err.log
+
+# Dokumentaatio (ei tarvita imagessa)
+README.md
+CLAUDE.md
+
+# Docker-tiedostot itse (eivät tarvita kontekstissa)
+Dockerfile
+docker-compose.yml
+.dockerignore

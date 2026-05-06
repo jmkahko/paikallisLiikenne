@@ -10,6 +10,9 @@ reaaliaikaisia bussi- ja raitiovaunulähtöjä. Käyttäjä voi lisätä enintä
 6 pysäkkiä, jotka tallennetaan selaimen `localStorage`:een. Tiedot haetaan
 Digitransit GraphQL-rajapinnasta (Waltti / Tampere).
 
+Tuotanto-kohteena on tavallinen PHP-tukeva web-hotelli.
+Paikallisesti voi simuloida hostingia Dockerissa (`docker compose up`).
+
 ## Tekniikat
 
 - **React 18** funktionaalisilla komponenteilla ja hookeilla.
@@ -20,6 +23,8 @@ Digitransit GraphQL-rajapinnasta (Waltti / Tampere).
 - **localStorage** pysäkkivalintojen tallennukseen (`useLocalStorage`-hook).
 - **Page Visibility API** (`visibilitychange`) pollingin pysäyttämiseen
   kun välilehti on piilossa.
+- **Docker** (multi-stage: `node`-build → `php:8-apache`-runtime)
+  simuloi web-hotelliympäristöä paikallisesti.
 - Ei TypeScriptiä. Ei testikirjastoa. Ei lintteriä konfiguroituna.
 
 Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä —
@@ -33,6 +38,9 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
 ├── vite.config.js           # Vite-asetukset (portti 5173, react-plugin)
 ├── package.json             # npm-skriptit & dependencies
 ├── .env.example             # Malli .env-tiedostosta (avain tyhjä)
+├── Dockerfile               # Multi-stage build → php:8-apache
+├── docker-compose.yml       # `docker compose up` käynnistys
+├── .dockerignore            # node_modules, dist, .git pois imageen
 ├── README.md                # Käyttäjäohjeet (asennus, API-avain, käyttö)
 ├── CLAUDE.md                # Tämä tiedosto
 └── src/
@@ -56,11 +64,17 @@ npm install        # asenna riippuvuudet
 npm run dev        # dev-palvelin http://localhost:5173
 npm run build      # tuotantokäännös → dist/
 npm run preview    # esikatsele tuotantokäännöstä
+
+# Web-hotelli-simulaatio (Apache + PHP 8):
+docker compose up --build   # http://localhost:8080
+docker compose down         # sammuta
 ```
 
 API-avain syötetään tiedostoon `.env` muodossa
 `VITE_DIGITRANSIT_API_KEY=...`. Tiedosto on `.gitignore`:ssa eikä saa päätyä
-GitHubiin. `.env.example` toimii mallina.
+GitHubiin. `.env.example` toimii mallina. Docker-build lukee saman `.env`:n
+build-argumentin kautta, jolloin avain paistuu staattiseen bundleen
+samalla tavalla kuin web-hotellissakin.
 
 ## Konventiot
 
@@ -83,7 +97,7 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Muutoksen tyyppi | Päivitä myös |
 | ---------------- | ------------ |
 | Uusi npm-riippuvuus tai version nosto | `package.json`, `package-lock.json` (auto), README-kohta "Tekninen yhteenveto" jos relevantti |
-| Uusi ympäristömuuttuja (`VITE_...`) | `.env.example`, README:n "API-avaimen hankinta" / "Asennus" -osiot |
+| Uusi ympäristömuuttuja (`VITE_...`) | `.env.example`, README:n "API-avaimen hankinta" / "Asennus" -osiot, `Dockerfile` (build-arg ja `ARG`/`ENV`) |
 | Uusi käyttäjälle näkyvä toiminto | README:n "Ominaisuudet"-lista; tarvittaessa "Pysäkkien lisääminen" |
 | Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto" |
 | Uusi komponentti tai tiedosto | Tämän CLAUDE.md:n "Hakemistorakenne" |
@@ -92,6 +106,8 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | `localStorage`-avaimen rikkova muutos | Nosta avaimen versionumeroa (`paikallis.stops.v1` → `v2`) ja `App.jsx`:n `STORAGE_KEY`. Mainitse README:ssä. |
 | Uusi npm-skripti `package.json`:iin | README:n komennot, tämän tiedoston "Yleiset komennot" |
 | Tyylimuutokset `:root`-muuttujiin | `src/styles.css` molemmat lohkot (tumma + light-media) |
+| Uusi PHP-tiedosto (esim. proxy) | Sijoita `public/api/`:in (Vite kopioi `dist/`:iin), suojaa `.htaccess`:lla, päivitä Dockerfile/README jos käyttäjältä vaaditaan toimia palvelimella |
+| Docker-imageen tarvittava lisätyökalu | `Dockerfile` (apt-get install) **ja** README "Web-hotelli-simulaatio (Docker)" -osio |
 
 ## Yleisiä sudenkuoppia
 
@@ -107,7 +123,11 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 - **API-avaimen vuotaminen**: Vite paljastaa kaikki `VITE_`-alkuiset
   ympäristömuuttujat selaimeen. Tämä on Digitransit-avaimelle hyväksyttävää
   (avain on subscription-tason rajoitettu), mutta älä lisää muita salaisuuksia
-  `VITE_`-prefixillä.
+  `VITE_`-prefixillä. Avaimen suojaamiseksi tulossa erillinen PHP-proxy-vaihe.
+- **Docker build vs. .env**: `docker compose up --build` lukee `.env`:n
+  composen kautta ja välittää avaimen `Dockerfile`:n `ARG`:lle. Jos
+  avain ei näy bundlessa, varmista että `.env` on olemassa ja että rebuildaat
+  imagen (`--build` lippu).
 - **Suluiden tasapaino**: ilman lintteriä JSX-virheet huomataan vasta
   käännöksessä. Aja `npm run build` ennen committia.
 

@@ -53,6 +53,37 @@ npm run build      # luo dist/-kansion
 npm run preview    # kokeile käännöstä paikallisesti
 ```
 
+## 3. Web-hotelli-simulaatio (Docker)
+
+Ennen kuin viet sovelluksen oikealle web-hotellille,
+voit testata sen Docker-containerissa, joka jäljittelee tyypillistä
+shared-hosting-ympäristöä: **Apache 2.4 + PHP 8** ja staattisten tiedostojen
+serveri. Tämä on hyödyllinen välivaihe etenkin kun lisäämme myöhemmin
+PHP-proxyn API-avaimen suojaamiseksi.
+
+**Vaatimukset:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(sis. docker compose).
+
+```bash
+# 1. Varmista että .env on luotu ja sisältää avaimen.
+# 2. Käännä + käynnistä container yhdellä komennolla:
+docker compose up --build
+
+# Sovellus näkyy: http://localhost:8080
+```
+
+Container tekee sisäisesti:
+
+1. Asentaa npm-riippuvuudet ja ajaa `npm run build`.
+2. Kopioi `dist/`-kansion sisällön Apachen `/var/www/html`-juureen
+   (kuten `public_html` web-hotellissa).
+3. Käynnistää Apachen + PHP:n portille 80, joka mapataan hostin porttiin 8080.
+
+Kun haluat sammuttaa: `Ctrl+C` (tai `docker compose down`).
+
+> Vinkki: kun lisäät myöhemmin PHP-tiedostoja (esim. proxyn), aja
+> `docker compose up --build` uudestaan jotta uusi tila kopioituu containeriin.
+
 ## Pysäkkien lisääminen
 
 1. Hae pysäkki nimellä (esim. `Keskustori`, `Hervanta`) tai pysäkkikoodilla
@@ -73,6 +104,8 @@ sivulatausten yli.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
 - Päivitys ajastimella `setInterval` (30 s) komponentin sisällä,
   pysäytetty `visibilitychange`-tapahtumaan kun välilehti on piilossa.
+- **Docker**: `Dockerfile` (multi-stage: node-build → php-apache) ja
+  `docker-compose.yml` simuloivat web-hotelli-ympäristöä.
 
 ## Tekijä
 
