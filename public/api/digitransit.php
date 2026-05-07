@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare(strict_types=1);           // Pakotetaan tiukat tyypit (int on int, string on string — ei hiljaisia muunnoksia)
 
 /**
  * Digitransit-proxy — pitää API-avaimen palvelimella.
@@ -14,101 +14,123 @@ declare(strict_types=1);
  *      (perinteinen web-hotelli — luodaan käsin palvelimelle).
  */
 
+// Kerrotaan selaimelle, että vastaus on aina JSON-muotoista (UTF-8-merkistöllä)
 header('Content-Type: application/json; charset=utf-8');
 
-// Salli vain POST.
+// --- VAIHE 1: Tarkista HTTP-metodi -------------------------------------------
+
+// Luetaan pyynnön metodi (GET, POST, PUT jne.) — tyhjä merkkijono jos ei saatavilla
+// GraphQL-kyselyt lähetetään aina POSTina, joten estetään kaikki muu
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    http_response_code(405);
-    header('Allow: POST');
-    echo json_encode(['errors' => [['message' => 'Method Not Allowed']]]);
-    exit;
+    http_response_code(405);          // 405 = Method Not Allowed
+    header('Allow: POST');            // Kerrotaan selaimelle mikä metodi olisi oikea
+    echo json_encode(['errors' => [['message' => 'Method Not Allowed']]]); // Virhevastaus JSON-muodossa
+    exit;                             // Lopetetaan skriptin suoritus heti
 }
 
-// 1. Ympäristömuuttuja
+// --- VAIHE 2: Hae API-avain -------------------------------------------------
+
+// Yritetään ensin lukea avain ympäristömuuttujasta (toimii Dockerissa ja osalla hosteista)
+// getenv() palauttaa muuttujan arvon tai false → ?: '' varmistaa että tulos on aina string
 $apiKey = (string) (getenv('DIGITRANSIT_API_KEY') ?: '');
 
-// 2. config.php fallback
+// Jos ympäristömuuttujaa ei ollut, kokeillaan config.php-tiedostoa (web-hotelli-vaihtoehto)
 if ($apiKey === '') {
-    $configFile = __DIR__ . '/config.php';
-    if (is_file($configFile)) {
-        /** @var mixed $config */
-        $config = require $configFile;
-        if (is_array($config)) {
+    $configFile = __DIR__ . '/config.php';  // __DIR__ = tämän tiedoston kansio (eli public/api/)
+    if (is_file($configFile)) {             // Tarkistetaan onko tiedosto olemassa
+        $config = require $configFile;      // Ladataan tiedosto — sen pitää palauttaa (return) array
+        if (is_array($config)) {            // Varmistetaan että palautusarvo todella on taulukko
+            // Luetaan 'digitransit_api_key'-avain taulukosta, tai tyhjä string jos puuttuu
             $apiKey = (string) ($config['digitransit_api_key'] ?? '');
         }
     }
 }
 
+// Jos avainta ei löytynyt kummastakaan paikasta → ei voida jatkaa
 if ($apiKey === '') {
-    http_response_code(500);
+    http_response_code(500);              // 500 = Internal Server Error (palvelimen ongelma)
     echo json_encode([
         'errors' => [[
             'message' => 'Palvelimelta puuttuu DIGITRANSIT_API_KEY '
                 . '(aseta env-muuttuja tai luo api/config.php).'
         ]]
     ]);
-    exit;
+    exit;                                 // Lopetetaan — ilman avainta ei voi tehdä mitään
 }
 
-// Lue clientin GraphQL-pyynnön runko.
+// --- VAIHE 3: Lue selaimen lähettämä GraphQL-pyyntö --------------------------
+
+// php://input on erikoisosoite, josta saa pyynnön raakarungon (body)
+// Tässä se on selaimen lähettämä JSON-muotoinen GraphQL-kysely
 $body = file_get_contents('php://input');
-if ($body === false || $body === '') {
-    http_response_code(400);
+if ($body === false || $body === '') {     // Jos body on tyhjä tai lukeminen epäonnistui
+    http_response_code(400);              // 400 = Bad Request (selaimen virhe)
     echo json_encode(['errors' => [['message' => 'Tyhjä pyyntö.']]]);
     exit;
 }
 
-// Välitä Digitransitiin.
+// --- VAIHE 4: Välitä pyyntö Digitransitin API:lle ----------------------------
+
+// Tämä on Digitransitin Waltti/Tampere GraphQL-rajapinnan osoite
 $endpoint = 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/';
 
-if (function_exists('curl_init')) {
-    $ch = curl_init($endpoint);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $body,
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'digitransit-subscription-key: ' . $apiKey,
+// Ensisijainen tapa: käytetään cURL-kirjastoa (nopea, luotettava, lähes aina saatavilla)
+if (function_exists('curl_init')) {        // Tarkistetaan onko cURL asennettu palvelimelle
+    $ch = curl_init($endpoint);           // Luodaan uusi cURL-yhteys annettuun osoitteeseen
+    curl_setopt_array($ch, [              // Asetetaan kaikki asetukset kerralla taulukkona
+        CURLOPT_RETURNTRANSFER => true,   // Palauttaa vastauksen merkkijonona (ei tulosta suoraan)
+        CURLOPT_POST           => true,   // Käytetään POST-metodia (GraphQL vaatii tämän)
+        CURLOPT_POSTFIELDS     => $body,  // Selaimen lähettämä GraphQL-kysely sellaisenaan
+        CURLOPT_HTTPHEADER     => [       // HTTP-headerit jotka lähetetään Digitransitille
+            'Content-Type: application/json',                    // Kerrotaan että data on JSONia
+            'digitransit-subscription-key: ' . $apiKey,          // API-avain joka todentaa meidät
         ],
-        CURLOPT_TIMEOUT        => 15,
-        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT        => 15,     // Koko pyyntö saa kestää max 15 sekuntia
+        CURLOPT_CONNECTTIMEOUT => 8,      // Yhteyden avaus saa kestää max 8 sekuntia
     ]);
-    $response = curl_exec($ch);
-    $status   = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err      = curl_error($ch);
-    curl_close($ch);
+    $response = curl_exec($ch);           // Suoritetaan pyyntö — vastaus tulee $response-muuttujaan
+    $status   = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);  // Luetaan HTTP-statuskoodi (200, 400 jne.)
+    $err      = curl_error($ch);          // Tallennetaan mahdollinen virheviesti
+    curl_close($ch);                      // Suljetaan yhteys ja vapautetaan muisti
 
-    if ($response === false) {
-        http_response_code(502);
+    if ($response === false) {            // Jos pyyntö epäonnistui kokonaan (esim. verkko-ongelma)
+        http_response_code(502);          // 502 = Bad Gateway (ylävirran palvelin ei vastannut)
         echo json_encode(['errors' => [['message' => 'Upstream-virhe: ' . $err]]]);
         exit;
     }
+
+// Vaihtoehtoinen tapa: käytetään PHP:n sisäänrakennettua file_get_contents-funktiota
+// Tämä on hitaampi mutta toimii jos palvelimelle ei ole asennettu cURLia
 } else {
-    // Fallback: file_get_contents + HTTP-stream wrapper.
+    // Luodaan HTTP-pyynnön asetukset "kontekstina" — tämä on PHP:n tapa tehdä pyyntöjä ilman cURLia
     $context = stream_context_create([
-        'http' => [
-            'method'        => 'POST',
-            'header'        => "Content-Type: application/json\r\n"
+        'http' => [                       // HTTP-protokollan asetukset
+            'method'        => 'POST',    // POST-metodi kuten cURL-versiossa
+            'header'        => "Content-Type: application/json\r\n"        // Samat headerit
                               . 'digitransit-subscription-key: ' . $apiKey . "\r\n",
-            'content'       => $body,
-            'timeout'       => 15,
-            'ignore_errors' => true,
+            'content'       => $body,     // GraphQL-kyselyn sisältö
+            'timeout'       => 15,        // Aikakatkaisu sekunneissa
+            'ignore_errors' => true,      // Älä kaadu virhestatuksiin — haluamme lukea vastauksen silti
         ],
     ]);
+    // @ vaimentaa varoitukset (esim. "failed to open stream") — käsitellään virhe itse alla
     $response = @file_get_contents($endpoint, false, $context);
-    $status = 200;
+    $status = 200;                        // Oletusarvo jos statuskoodia ei saada selville
+    // PHP:n file_get_contents täyttää automaattisesti $http_response_header-muuttujan
+    // Ensimmäinen rivi on muotoa "HTTP/1.1 200 OK" — kaivetaan statuskoodi regexillä
     if (isset($http_response_header[0])
-        && preg_match('#HTTP/\S+\s+(\d+)#', $http_response_header[0], $m)
+        && preg_match('#HTTP/\S+\s+(\d+)#', $http_response_header[0], $m)  // Etsitään 3-numeroinen koodi
     ) {
-        $status = (int) $m[1];
+        $status = (int) $m[1];            // Tallennetaan löydetty statuskoodi (esim. 200, 400, 500)
     }
-    if ($response === false) {
-        http_response_code(502);
+    if ($response === false) {            // Jos pyyntö epäonnistui kokonaan
+        http_response_code(502);          // 502 = Bad Gateway
         echo json_encode(['errors' => [['message' => 'Upstream-virhe (stream)']]]);
         exit;
     }
 }
 
-http_response_code($status ?: 200);
-echo $response;
+// --- VAIHE 5: Palautetaan Digitransitin vastaus selaimelle -------------------
+
+http_response_code($status ?: 200);       // Asetetaan sama statuskoodi jonka Digitransit antoi (tai 200)
+echo $response;                           // Tulostetaan Digitransitin JSON-vastaus sellaisenaan selaimelle
