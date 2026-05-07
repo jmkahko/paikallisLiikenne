@@ -1,32 +1,32 @@
 // Digitransit GraphQL API – Waltti (Tampere/Nysse)
-// Dokumentaatio: https://digitransit.fi/en/developers/apis/1-routing-api/
+//
+// Selain ei kutsu Digitransitia suoraan, vaan oman palvelimen
+// PHP-proxyn kautta (/api/digitransit.php). Avain pidetään palvelimella.
+// Dev-tilassa Vite-server proxyttää saman polun suoraan Digitransitiin
+// ja injektoi avaimen .env:n DIGITRANSIT_API_KEY-muuttujasta — avain ei
+// mene selainbundleen myöskään devissä.
 
-const ENDPOINT =
-  'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/'
-
-function getApiKey() {
-  const key = import.meta.env.VITE_DIGITRANSIT_API_KEY
-  if (!key) {
-    throw new Error(
-      'Digitransit API -avain puuttuu. Luo .env-tiedosto ja aseta VITE_DIGITRANSIT_API_KEY.'
-    )
-  }
-  return key
-}
+const ENDPOINT = '/api/digitransit.php'
 
 async function gqlFetch(query, variables = {}) {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'digitransit-subscription-key': getApiKey()
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables })
   })
 
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`HTTP ${res.status}: ${text || res.statusText}`)
+    let msg = res.statusText
+    try {
+      const errJson = await res.json()
+      if (errJson?.errors?.length) {
+        msg = errJson.errors.map((e) => e.message).join('; ')
+      }
+    } catch {
+      const text = await res.text().catch(() => '')
+      if (text) msg = text
+    }
+    throw new Error(`HTTP ${res.status}: ${msg}`)
   }
 
   const json = await res.json()

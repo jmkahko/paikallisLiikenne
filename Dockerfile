@@ -6,19 +6,14 @@
 #   2) php:8.2-apache ajaa Apache + PHP 8 ja tarjoilee dist/-kansion sisällön
 #      DocumentRoot:sta /var/www/html (vastaa `public_html`-juurta).
 #
-# API-avain välitetään build-argumenttina (`VITE_DIGITRANSIT_API_KEY`),
-# koska Vite paistaa sen staattiseen bundleen build-vaiheessa — sama
-# käyttäytyminen kuin oikeassa hostingissa.
+# API-avainta ei tarvita build-vaiheessa: PHP-proxy lukee sen runtimessa
+# ympäristömuuttujasta DIGITRANSIT_API_KEY.
 
 # ---------------------------------------------------------------------------
 # 1) Build stage
 # ---------------------------------------------------------------------------
 FROM node:20-alpine AS build
 WORKDIR /app
-
-# Build-time avain — välitetään docker-compose.yml:n `build.args`-kentästä.
-ARG VITE_DIGITRANSIT_API_KEY=""
-ENV VITE_DIGITRANSIT_API_KEY=$VITE_DIGITRANSIT_API_KEY
 
 # Asenna riippuvuudet erillisessä tasossa, jotta Docker layer cache toimii.
 COPY package.json package-lock.json* ./
@@ -34,7 +29,7 @@ RUN npm run build
 FROM php:8.2-apache AS runtime
 
 # Salli mod_rewrite ja .htaccess-tiedostojen vaikutus DocumentRootissa
-# (välttämätön, kun lisäämme PHP-proxyn ja sen .htaccess-suojauksen).
+# (välttämätön config.php:n suojaukselle).
 RUN a2enmod rewrite \
  && printf '<Directory /var/www/html/>\n\
     AllowOverride All\n\
@@ -42,7 +37,14 @@ RUN a2enmod rewrite \
 </Directory>\n' > /etc/apache2/conf-available/allow-htaccess.conf \
  && a2enconf allow-htaccess
 
-# Kopioi staattinen build Apachen DocumentRootiin.
+# Apachen oletus PHP-FPM/mod_php välittää getenv():lle vain SetEnv-arvot,
+# joten julkaistaan kontaineriin tulevat env-muuttujat PHP:lle.
+# (Tämä mahdollistaa DIGITRANSIT_API_KEY:n lukemisen getenv():llä.)
+RUN printf 'PassEnv DIGITRANSIT_API_KEY\n' \
+    > /etc/apache2/conf-available/passenv.conf \
+ && a2enconf passenv
+
+# Kopioi staattinen build (sisältää PHP-proxyn `api/`-alikansiossa).
 COPY --from=build /app/dist/ /var/www/html/
 
 EXPOSE 80

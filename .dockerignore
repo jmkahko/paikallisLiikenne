@@ -8,6 +8,9 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Palvelimen oma config.php ei kuulu imageen — avain syötetään env-muuttujana
+public/api/config.php
+
 # Versionhallinta ja editori
 .git
 .gitignore

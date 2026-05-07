@@ -7,7 +7,6 @@ const STORAGE_KEY = 'paikallis.stops.v1'
 
 export default function App() {
   const [stops, setStops] = useLocalStorage(STORAGE_KEY, [])
-  const apiKey = import.meta.env.VITE_DIGITRANSIT_API_KEY
 
   function addStop(stop) {
     setStops((prev) => {
@@ -54,23 +53,6 @@ export default function App() {
           Reaaliaikaiset Nysse-lähdöt — valitse jopa {MAX_STOPS} pysäkkiä.
         </p>
       </header>
-
-      {!apiKey && (
-        <div className="banner banner--warn">
-          <strong>Digitransit API -avain puuttuu.</strong> Luo projektin juureen
-          tiedosto <code>.env</code> ja lisää sinne rivi
-          <code>VITE_DIGITRANSIT_API_KEY=oma-avaimesi</code>. Avaimen saa ilmaiseksi
-          osoitteesta{' '}
-          <a
-            href="https://portal-api.digitransit.fi/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            portal-api.digitransit.fi
-          </a>
-          . Käynnistä kehityspalvelin uudelleen avaimen lisäämisen jälkeen.
-        </div>
-      )}
 
       <section className="controls">
         <StopSearch

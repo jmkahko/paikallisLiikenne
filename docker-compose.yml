@@ -4,19 +4,20 @@
 # Sammutus:     docker compose down
 # Sovellus:     http://localhost:8080
 #
-# Lukee API-avaimen .env-tiedostosta (sama jota npm run dev käyttää) ja
-# välittää sen build-argumenttina, jotta Vite paistaa sen tuotantobundleen.
+# DIGITRANSIT_API_KEY luetaan .env-tiedostosta ja välitetään containerin
+# RUNTIME-ympäristömuuttujaksi. PHP-proxy (api/digitransit.php) lukee sen
+# getenv():llä. Avainta ei tarvita build-aikana eikä se päädy imagen
+# kerroksiin.
 
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # Compose interpoloi tämän automaattisesti .env-tiedostosta.
-        VITE_DIGITRANSIT_API_KEY: ${VITE_DIGITRANSIT_API_KEY:-}
     image: paikallis-liikenne:local
     container_name: paikallis-liikenne
     ports:
       - "8080:80"
+    environment:
+      DIGITRANSIT_API_KEY: ${DIGITRANSIT_API_KEY:-}
     restart: unless-stopped
