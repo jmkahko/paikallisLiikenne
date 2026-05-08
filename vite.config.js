@@ -11,22 +11,30 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiKey = env.DIGITRANSIT_API_KEY || ''
+  const endpoint = env.DIGITRANSIT_ENDPOINT || ''
+
+  // Proxy-asetukset tarvitaan vain dev-tilassa (npm run dev).
+  // Build-vaiheessa (npm run build / Docker) proxya ei käytetä,
+  // joten puuttuva endpoint ei ole ongelma.
+  const proxyConfig = {}
+  if (endpoint) {
+    const endpointUrl = new URL(endpoint)
+    proxyConfig['/api/digitransit.php'] = {
+      target: endpointUrl.origin,
+      changeOrigin: true,
+      rewrite: () => endpointUrl.pathname,
+      headers: apiKey
+        ? { 'digitransit-subscription-key': apiKey }
+        : {}
+    }
+  }
 
   return {
     plugins: [react()],
     server: {
       port: 5173,
       open: true,
-      proxy: {
-        '/api/digitransit.php': {
-          target: 'https://api.digitransit.fi',
-          changeOrigin: true,
-          rewrite: () => '/routing/v2/waltti/gtfs/v1/',
-          headers: apiKey
-            ? { 'digitransit-subscription-key': apiKey }
-            : {}
-        }
-      }
+      proxy: proxyConfig
     }
   }
 })

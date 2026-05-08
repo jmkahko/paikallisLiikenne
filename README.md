@@ -20,6 +20,8 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 - Vaalea/tumma teema seuraa järjestelmäasetusta.
 - **API-avain pysyy palvelimella** — selaimessa ei ole avainta missään
   vaiheessa. PHP-proxy välittää GraphQL-kutsut Digitransitiin.
+- **CORS-suojaus** — proxy hyväksyy vain omalta sivustolta tulevat pyynnöt
+  (`ALLOWED_ORIGIN`). Estää ulkopuolisen väärinkäytön.
 
 ## 1. API-avaimen hankinta
 
@@ -38,10 +40,13 @@ Tarvitset [Node.js 18+](https://nodejs.org/).
 # 1. Asenna riippuvuudet
 npm install
 
-# 2. Luo .env-tiedosto API-avaimen kanssa
+# 2. Luo .env-tiedosto asetuksilla
 cp .env.example .env
-# avaa .env ja täytä DIGITRANSIT_API_KEY=oma-avaimesi
-# (HUOM: muuttujassa EI ole VITE_-prefixiä — avain ei mene selainbundleen.)
+# avaa .env ja täytä kaikki kolme (pakollisia):
+#   DIGITRANSIT_API_KEY=oma-avaimesi
+#   DIGITRANSIT_ENDPOINT=https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/
+#   ALLOWED_ORIGIN=http://localhost:5173
+# (HUOM: muuttujissa EI ole VITE_-prefixiä — arvot eivät mene selainbundleen.)
 
 # 3. Käynnistä kehityspalvelin
 npm run dev
@@ -71,7 +76,8 @@ ympäristöä: **Apache 2.4 + PHP 8** ja staattisten tiedostojen serveri.
 (sis. docker compose).
 
 ```bash
-# 1. Varmista että .env on luotu ja DIGITRANSIT_API_KEY täytetty.
+# 1. Varmista että .env on luotu ja kaikki kolme muuttujaa täytetty
+#    (DIGITRANSIT_API_KEY, DIGITRANSIT_ENDPOINT, ALLOWED_ORIGIN=http://localhost:8080).
 # 2. Käännä + käynnistä container yhdellä komennolla:
 docker compose up --build
 
@@ -85,8 +91,9 @@ Container tekee sisäisesti:
    (kuten `public_html` web-hotellissa). Tähän kuuluu myös
    `dist/api/digitransit.php`.
 3. Käynnistää Apachen + PHP:n portille 80, joka mapataan hostin porttiin 8080.
-4. Välittää `DIGITRANSIT_API_KEY`-ympäristömuuttujan PHP-prosessille,
-   josta proxy lukee sen `getenv()`:llä.
+4. Välittää ympäristömuuttujat (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`,
+   `DIGITRANSIT_ENDPOINT`) PHP-prosessille `PassEnv`:llä. Kaikki arvot
+   luetaan `.env`-tiedostosta — täytä se ennen käynnistystä.
 
 Avain ei näy selaimessa, ei build-imagen kerroksissa, vaan ainoastaan
 runtime-ympäristössä. Sammutus: `Ctrl+C` tai `docker compose down`.
@@ -108,17 +115,19 @@ sekä staattiset tiedostot että `dist/api/digitransit.php` + `.htaccess`.
 2. **Lataa `dist/`-kansion sisältö** hostin `public_html`-juureen.
    Varmista että `api/`-alikansio kopioituu mukana.
 
-3. **Aseta API-avain palvelimelle.** Kaksi vaihtoehtoa:
+3. **Aseta asetukset palvelimelle.** Kaksi vaihtoehtoa:
 
-   **A) Ympäristömuuttujana** (jos hosting tukee niitä):
-   - cPanelin "Environment Variables" tai vastaavasta paneelista lisää
-     `DIGITRANSIT_API_KEY` = avain.
+   **A) Ympäristömuuttujina** (jos hosting tukee niitä):
+   - cPanelin "Environment Variables" tai vastaavasta paneelista lisää:
+     - `DIGITRANSIT_API_KEY` = avain
+     - `DIGITRANSIT_ENDPOINT` = GraphQL-rajapinnan URL
+     - `ALLOWED_ORIGIN` = sivustosi osoite, esim. `https://oma-domain.fi`
 
    **B) `config.php`-tiedostona** (toimii kaikilla PHP-hostingeilla):
    - Hostin tiedostonhallinnassa, mene `public_html/api/`-kansioon.
    - Kopioi `config.example.php` → `config.php`.
-   - Avaa `config.php` ja korvaa `aseta-oikea-avain-tahan` Digitransit-
-     avaimellasi.
+   - Täytä `digitransit_api_key`, `digitransit_endpoint` ja halutessasi
+     `allowed_origin`.
    - **`config.php` ei saa päätyä git-repoon** (on `.gitignore`:ssa).
 
 4. **Tarkista että suojaus toimii:**
@@ -129,9 +138,10 @@ sekä staattiset tiedostot että `dist/api/digitransit.php` + `.htaccess`.
 
 ### Avaimen vaihto / rotatointi
 
-Korvaa `public_html/api/config.php`:n `digitransit_api_key`-arvo uudella
-avaimella ja generoi vanha tilalle Digitransit-portaalista. Sovellusta ei
-tarvitse kääntää uudelleen.
+Korvaa `public_html/api/config.php`:n `digitransit_api_key`-arvo (tai
+`DIGITRANSIT_API_KEY`-ympäristömuuttuja) uudella avaimella ja generoi
+vanha tilalle Digitransit-portaalista. Sovellusta ei tarvitse kääntää
+uudelleen.
 
 ## Pysäkkien lisääminen
 
@@ -149,12 +159,14 @@ sivulatausten yli.
 - **React 18** + **Vite** (ei TypeScriptiä, ei lisäkirjastoja UI:lle).
 - Selain kutsuu vain saman domainin `/api/digitransit.php`-proxya. PHP
   lisää `digitransit-subscription-key`-headerin ja välittää GraphQL-kutsun
-  Digitransitiin (`https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/`).
-- Avain on palvelimella joko ympäristömuuttujassa (`DIGITRANSIT_API_KEY`)
-  tai `api/config.php`:ssa. `.htaccess` estää suoran latauksen.
+  `DIGITRANSIT_ENDPOINT`-osoitteeseen.
+- CORS-suojaus: `ALLOWED_ORIGIN`-muuttuja rajaa pyynnöt vain omalta
+  sivustolta tuleviin.
+- Asetukset (avain, endpoint, origin) ovat palvelimella joko
+  ympäristömuuttujissa tai `api/config.php`:ssa. `.htaccess` estää
+  config-tiedoston suoran latauksen.
 - Dev-tilassa Vite-server proxyttää `/api/digitransit.php`-kutsut suoraan
-  Digitransitiin ja injektoi avaimen `.env`-tiedoston
-  `DIGITRANSIT_API_KEY`-muuttujasta.
+  Digitransitiin ja injektoi avaimen `.env`-tiedostosta.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
 - Päivitys ajastimella `setInterval` (30 s) komponentin sisällä,
   pysäytetty `visibilitychange`-tapahtumaan kun välilehti on piilossa.

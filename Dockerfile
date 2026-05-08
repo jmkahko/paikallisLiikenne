@@ -40,7 +40,7 @@ RUN a2enmod rewrite \
 # Apachen oletus PHP-FPM/mod_php välittää getenv():lle vain SetEnv-arvot,
 # joten julkaistaan kontaineriin tulevat env-muuttujat PHP:lle.
 # (Tämä mahdollistaa DIGITRANSIT_API_KEY:n lukemisen getenv():llä.)
-RUN printf 'PassEnv DIGITRANSIT_API_KEY\n' \
+RUN printf 'PassEnv DIGITRANSIT_API_KEY\nPassEnv ALLOWED_ORIGIN\nPassEnv DIGITRANSIT_ENDPOINT\n' \
     > /etc/apache2/conf-available/passenv.conf \
  && a2enconf passenv
 

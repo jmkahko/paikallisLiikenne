@@ -14,4 +14,13 @@
  */
 return [
     'digitransit_api_key' => 'aseta-oikea-avain-tahan',
+
+    // Sallittu origin (CORS). Vain tästä osoitteesta tulevat pyynnöt hyväksytään.
+    // Jätä tyhjäksi tai poista rivi jos et halua rajoittaa.
+    // Esim. 'https://minunsivuni.fi'
+    'allowed_origin' => '',
+
+    // Digitransitin GraphQL-rajapinnan osoite (Waltti/Tampere).
+    // Muuta vain jos käytät eri endpointtia.
+    'digitransit_endpoint' => 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/',
 ];

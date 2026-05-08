@@ -4,10 +4,10 @@
 # Sammutus:     docker compose down
 # Sovellus:     http://localhost:8080
 #
-# DIGITRANSIT_API_KEY luetaan .env-tiedostosta ja välitetään containerin
-# RUNTIME-ympäristömuuttujaksi. PHP-proxy (api/digitransit.php) lukee sen
-# getenv():llä. Avainta ei tarvita build-aikana eikä se päädy imagen
-# kerroksiin.
+# Ympäristömuuttujat luetaan .env-tiedostosta ja välitetään containerin
+# RUNTIME-ympäristömuuttujiksi. PHP-proxy (api/digitransit.php) lukee ne
+# getenv():llä. Arvot eivät päädy imagen kerroksiin.
+# Täytä .env ennen käynnistystä (ks. .env.example).
 
 services:
   web:
@@ -20,4 +20,6 @@ services:
       - "8080:80"
     environment:
       DIGITRANSIT_API_KEY: ${DIGITRANSIT_API_KEY:-}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-}
+      DIGITRANSIT_ENDPOINT: ${DIGITRANSIT_ENDPOINT:-}
     restart: unless-stopped

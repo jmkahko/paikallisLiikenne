@@ -20,31 +20,58 @@ header('Content-Type: application/json; charset=utf-8');
 // --- VAIHE 1: Tarkista HTTP-metodi -------------------------------------------
 
 // Luetaan pyynnön metodi (GET, POST, PUT jne.) — tyhjä merkkijono jos ei saatavilla
-// GraphQL-kyselyt lähetetään aina POSTina, joten estetään kaikki muu
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+// GraphQL-kyselyt lähetetään aina POSTina, OPTIONS sallitaan CORS-preflight-pyyntöjä varten
+$method = $_SERVER['REQUEST_METHOD'] ?? '';
+if ($method !== 'POST' && $method !== 'OPTIONS') {
     http_response_code(405);          // 405 = Method Not Allowed
-    header('Allow: POST');            // Kerrotaan selaimelle mikä metodi olisi oikea
+    header('Allow: POST, OPTIONS');   // Kerrotaan selaimelle mitkä metodit ovat sallittuja
     echo json_encode(['errors' => [['message' => 'Method Not Allowed']]]); // Virhevastaus JSON-muodossa
     exit;                             // Lopetetaan skriptin suoritus heti
 }
 
-// --- VAIHE 2: Hae API-avain -------------------------------------------------
+// --- VAIHE 1b: Lataa asetukset (env-muuttujat + config.php fallback) --------
 
-// Yritetään ensin lukea avain ympäristömuuttujasta (toimii Dockerissa ja osalla hosteista)
-// getenv() palauttaa muuttujan arvon tai false → ?: '' varmistaa että tulos on aina string
-$apiKey = (string) (getenv('DIGITRANSIT_API_KEY') ?: '');
-
-// Jos ympäristömuuttujaa ei ollut, kokeillaan config.php-tiedostoa (web-hotelli-vaihtoehto)
-if ($apiKey === '') {
-    $configFile = __DIR__ . '/config.php';  // __DIR__ = tämän tiedoston kansio (eli public/api/)
-    if (is_file($configFile)) {             // Tarkistetaan onko tiedosto olemassa
-        $config = require $configFile;      // Ladataan tiedosto — sen pitää palauttaa (return) array
-        if (is_array($config)) {            // Varmistetaan että palautusarvo todella on taulukko
-            // Luetaan 'digitransit_api_key'-avain taulukosta, tai tyhjä string jos puuttuu
-            $apiKey = (string) ($config['digitransit_api_key'] ?? '');
-        }
+// Ladataan config.php kerran — käytetään fallbackina kaikille asetuksille
+$configFile = __DIR__ . '/config.php';     // __DIR__ = tämän tiedoston kansio (eli public/api/)
+$fileConfig = [];                          // Tyhjä taulukko oletuksena
+if (is_file($configFile)) {               // Tarkistetaan onko tiedosto olemassa
+    $loaded = require $configFile;         // Ladataan tiedosto — sen pitää palauttaa (return) array
+    if (is_array($loaded)) {
+        $fileConfig = $loaded;
     }
 }
+
+// Luetaan asetukset: ensin env-muuttuja, sitten config.php fallback
+$apiKey        = (string) (getenv('DIGITRANSIT_API_KEY') ?: ($fileConfig['digitransit_api_key'] ?? ''));
+$allowedOrigin = (string) (getenv('ALLOWED_ORIGIN')      ?: ($fileConfig['allowed_origin']      ?? ''));
+$endpoint      = (string) (getenv('DIGITRANSIT_ENDPOINT') ?: ($fileConfig['digitransit_endpoint'] ?? ''));
+
+// --- VAIHE 1c: CORS — salli pyynnöt vain sallitusta osoitteesta -------------
+
+// Selaimen lähettämä Origin-header (esim. "http://localhost:8080")
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+// Jos ALLOWED_ORIGIN on määritelty, tarkistetaan että Origin täsmää
+if ($allowedOrigin !== '') {
+    if ($origin !== $allowedOrigin) {                   // Origin puuttuu tai ei täsmää
+        http_response_code(403);                       // 403 = Forbidden (kielletty)
+        echo json_encode(['errors' => [['message' => 'Kielletty: väärä origin.']]]);
+        exit;
+    }
+    // Kerrotaan selaimelle että tämä origin on sallittu (CORS-headerit)
+    header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+}
+
+// Selain lähettää ensin OPTIONS-preflight-pyynnön ennen varsinaista POSTia
+// — vastataan siihen tyhjällä 204:llä ja lopetetaan heti
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(204);                           // 204 = No Content (ok, ei sisältöä)
+    exit;
+}
+
+// --- VAIHE 2: Tarkista API-avain --------------------------------------------
 
 // Jos avainta ei löytynyt kummastakaan paikasta → ei voida jatkaa
 if ($apiKey === '') {
@@ -56,6 +83,18 @@ if ($apiKey === '') {
         ]]
     ]);
     exit;                                 // Lopetetaan — ilman avainta ei voi tehdä mitään
+}
+
+// Jos endpointtia ei ole asetettu → ei voida jatkaa
+if ($endpoint === '') {
+    http_response_code(500);
+    echo json_encode([
+        'errors' => [[
+            'message' => 'Palvelimelta puuttuu DIGITRANSIT_ENDPOINT '
+                . '(aseta env-muuttuja tai luo api/config.php).'
+        ]]
+    ]);
+    exit;
 }
 
 // --- VAIHE 3: Lue selaimen lähettämä GraphQL-pyyntö --------------------------
@@ -70,9 +109,6 @@ if ($body === false || $body === '') {     // Jos body on tyhjä tai lukeminen e
 }
 
 // --- VAIHE 4: Välitä pyyntö Digitransitin API:lle ----------------------------
-
-// Tämä on Digitransitin Waltti/Tampere GraphQL-rajapinnan osoite
-$endpoint = 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/';
 
 // Ensisijainen tapa: käytetään cURL-kirjastoa (nopea, luotettava, lähes aina saatavilla)
 if (function_exists('curl_init')) {        // Tarkistetaan onko cURL asennettu palvelimelle
