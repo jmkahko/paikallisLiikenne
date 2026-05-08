@@ -1,5 +1,6 @@
 import StopSearch from './components/StopSearch.jsx'
 import StopCard from './components/StopCard.jsx'
+import PrivacyBanner from './components/PrivacyBanner.jsx'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 
 const MAX_STOPS = 6
@@ -88,6 +89,8 @@ export default function App() {
           ))}
         </div>
       )}
+
+      <PrivacyBanner />
 
       <footer className="app__footer">
         <p>

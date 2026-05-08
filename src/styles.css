@@ -445,6 +445,67 @@ a {
   border-top: 3px solid var(--rail);
 }
 
+/* ---- Privacy banner ---- */
+
+.privacy-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.privacy-banner__content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.privacy-banner__title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.privacy-banner__text {
+  margin: 0;
+  flex: 1;
+  min-width: 250px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.privacy-banner__text code {
+  background: var(--card-2);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.privacy-banner__btn {
+  flex-shrink: 0;
+  padding: 0.5rem 1.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.privacy-banner__btn:hover {
+  opacity: 0.85;
+}
+
 @media (max-width: 480px) {
   .app {
     padding: 1.25rem 0.75rem 3rem;
@@ -458,5 +519,13 @@ a {
   .route-badge {
     min-width: 38px;
     font-size: 0.85rem;
+  }
+  .privacy-banner__content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .privacy-banner__btn {
+    width: 100%;
+    text-align: center;
   }
 }

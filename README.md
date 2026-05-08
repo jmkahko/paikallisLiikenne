@@ -22,6 +22,10 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   vaiheessa. PHP-proxy välittää GraphQL-kutsut Digitransitiin.
 - **CORS-suojaus** — proxy hyväksyy vain omalta sivustolta tulevat pyynnöt
   (`ALLOWED_ORIGIN`). Estää ulkopuolisen väärinkäytön.
+- **Tietosuojailmoitus** — kertoo käyttäjälle ensimmäisellä kerralla, että
+  sovellus tallentaa pysäkkivalinnat selaimen `localStorage`:en. Ei evästeitä,
+  ei analytiikkaa, ei tietojen lähetystä ulkopuolisille. Ilmoituksen voi
+  sulkea ja valinta muistetaan.
 
 ## 1. API-avaimen hankinta
 

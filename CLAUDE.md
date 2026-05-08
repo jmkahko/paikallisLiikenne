@@ -68,8 +68,9 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     │   ├── useLocalStorage.js   # Yleinen localStorage-hook
     │   └── useDepartures.js     # Pollaa pysäkin lähtöjä, näkyvyystietoinen
     └── components/
-        ├── StopSearch.jsx   # Pysäkkihaku (debounce 350 ms)
-        └── StopCard.jsx     # Yhden pysäkin kortti + lähdöt
+        ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
+        ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
+        └── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
 ```
 
 ## Yleiset komennot
