@@ -21,10 +21,11 @@ Paikallisesti voi simuloida hostingia Dockerissa (`docker compose up`).
 - **Vanilla CSS** (`src/styles.css`). Ei Tailwindia, ei CSS-in-JS:ää.
 - **Fetch + GraphQL POST** oman PHP-proxyn (`/api/digitransit.php`) kautta
   — selain ei kutsu Digitransitia suoraan, eikä avain ole bundlessa.
-- **PHP-proxy** (`public/api/digitransit.php`) lisää
-  `digitransit-subscription-key`-headerin ja välittää GraphQL-pyynnön
+- **PHP-proxy** (`public/api/digitransit.php`, tuotannossa `public_html/api/digitransit.php`)
+  lisää `digitransit-subscription-key`-headerin ja välittää GraphQL-pyynnön
   Digitransitiin. Asetukset (avain, endpoint, CORS-origin) luetaan
-  ympäristömuuttujista tai fallbackina `public/api/config.php`-tiedostosta.
+  ympäristömuuttujista tai fallbackina `config.php`-tiedostosta, joka sijaitsee
+  web-rootin yläpuolella (`/home/käyttäjä/config.php`) turvallisuuden vuoksi.
 - **CORS-suojaus**: PHP-proxy hyväksyy vain pyynnöt, joiden `Origin`-header
   vastaa `ALLOWED_ORIGIN`-ympäristömuuttujaa. Estää ulkopuolisen
   väärinkäytön (esim. cURL, toisen sivuston JS).
@@ -54,10 +55,9 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
 ├── README.md                # Käyttäjäohjeet (asennus, API-avain, julkaisu)
 ├── CLAUDE.md                # Tämä tiedosto
 ├── public/
-│   └── api/                     # Vite kopioi sellaisenaan dist/api/:hin
+│   └── api/
 │       ├── digitransit.php      # Tuotannon PHP-proxy
-│       ├── config.example.php   # Malli; käyttäjä luo config.php palvelimelle
-│       └── .htaccess            # Estää config.php:n suoran latauksen
+│       └── config.example.php   # Malli; käyttäjä luo config.php web-rootin yläpuolelle
 └── src/
     ├── main.jsx             # React-juuren bootstrap
     ├── App.jsx              # Sovelluksen päärakenne, tila, layout
@@ -71,6 +71,19 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
         └── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
+```
+
+**Web-hotellissa:**
+
+```
+/home/käyttäjä/
+├── config.php               ← API-avain, ympäristömuuttujat (web-rootin yläpuolella, turvassa)
+├── public_html/             ← web-root
+│   ├── index.html
+│   ├── api/
+│   │   └── digitransit.php  ← PHP-proxy
+│   ├── [muut staattiset tiedostot]
+│   └── .htaccess            ← estää .env:n ja muiden sensitiivisten tiedostojen latauksen
 ```
 
 ## Yleiset komennot
@@ -102,10 +115,11 @@ kentän kautta `docker-compose.yml`:ssa. Apache lukee ne `PassEnv`:llä ja
 PHP saa ne `getenv()`:lla. Oletusarvoja ei ole — kaikki luetaan `.env`:stä.
 
 **Tuotanto (web-hotelli):** Joko ympäristömuuttujat (jos hosting tukee) tai
-`public_html/api/config.php` luotu palvelimella. Tämä tiedosto luodaan
-käsin, eikä se päädy git-repoon (`.gitignore`).
+`config.php` luotu web-hotellin juureen (`/home/käyttäjä/config.php`, eli
+`public_html`:n yläpuolelle). Tämä tiedosto luodaan käsin palvelimella,
+eikä se päädy git-repoon (`.gitignore`). Yläpuolella sijainti suojaa API-avaimen.
 
-`.env`, `.env.local` ja `public/api/config.php` ovat kaikki gitignoroituja.
+`.env`, `.env.local` ja `config.php` ovat kaikki gitignoroituja.
 
 ## Konventiot
 
@@ -136,7 +150,7 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto" |
 | Uusi komponentti tai tiedosto | Tämän CLAUDE.md:n "Hakemistorakenne" |
 | Digitransit-päätepisteen URL muuttuu | `.env` (`DIGITRANSIT_ENDPOINT`), `config.example.php`. Ei kovakoodattu PHP:ssä, Vitessä tai docker-composessa. |
-| Selainpuolen ENDPOINT muuttuu | `src/api/digitransit.js` (`ENDPOINT`-vakio), `vite.config.js`-proxy-polun avain ja PHP-tiedoston nimi `public/api/`:ssa pysyvät synkassa. |
+| Selainpuolen ENDPOINT muuttuu | `src/api/digitransit.js` (`ENDPOINT`-vakio), `vite.config.js`-proxy-polun avain ja PHP-tiedoston sijainti (`public/api/digitransit.php`) pysyvät synkassa. |
 | PHP-proxy lisää uusia kenttiä/headeria | Päivitä sekä `public/api/digitransit.php` **että** `vite.config.js`:n dev-proxy `headers`. |
 | Maksimi pysäkkimäärä muuttuu | `App.jsx` (`MAX_STOPS`), README, tämä taulukko |
 | `localStorage`-avaimen rikkova muutos | Nosta avaimen versionumeroa (`paikallis.stops.v1` → `v2`) ja `App.jsx`:n `STORAGE_KEY`. Mainitse README:ssä. |
@@ -165,7 +179,8 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
   joten käytä `docker compose up --build` (8080) tai
   `php -S 0.0.0.0:8080 -t dist`.
 - **`config.php` ei git-repoon**: tarkista `.gitignore` ennen committia
-  että `public/api/config.php` ei näy `git status`:ssa.
+  että `config.php` ei näy `git status`:ssa. Web-hotellissa se luodaan
+  palvelimella web-rootin yläpuolelle (`/home/käyttäjä/config.php`).
 - **Docker getenv()**: Apache+PHP ei oletuksena välitä container-tason
   env-muuttujia PHP-prosessille. `Dockerfile`:ssa on `PassEnv`-direktiivit
   (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`, `DIGITRANSIT_ENDPOINT`) jotka

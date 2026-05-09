@@ -105,10 +105,26 @@ runtime-ympäristössä. Sammutus: `Ctrl+C` tai `docker compose down`.
 ## 4. Julkaisu web-hotellille
 
 Sovelluksen kääntäminen tuottaa `dist/`-kansion, jonka sisältö ladataan
-hostin `public_html`-juureen (cPanel, FTP/SFTP tai vastaava). Sisällä on
-sekä staattiset tiedostot että `dist/api/digitransit.php` + `.htaccess`.
+hostin `public_html`-juureen (cPanel, FTP/SFTP tai vastaava).
 
-**Vaiheet:**
+### Kansiorakenne web-hotellissa
+
+**Paras käytäntö:** sijoita `config.php` **`public_html`:n yläpuolelle**
+(web-rootin ulkopuolelle), jotta API-avaimesi ei ole koskaan suoraan
+saatavilla selaimesta.
+
+```
+/home/käyttäjä/
+├── config.php              ← API-avain turvassa! (yläpuolella)
+├── public_html/            ← web-root (näkyy webbissä)
+│   ├── index.html
+│   ├── api/
+│   │   └── digitransit.php ← PHP-proxy
+│   ├── [muut staattiset tiedostot]
+│   └── .htaccess           ← estää .env:n suoran latauksen
+```
+
+### Vaiheet:
 
 1. **Käännä sovellus paikallisesti:**
 
@@ -117,33 +133,79 @@ sekä staattiset tiedostot että `dist/api/digitransit.php` + `.htaccess`.
    ```
 
 2. **Lataa `dist/`-kansion sisältö** hostin `public_html`-juureen.
-   Varmista että `api/`-alikansio kopioituu mukana.
+   - Varmista että `api/`-alikansio kopioituu mukana (sisältää `digitransit.php`-tiedoston)
 
-3. **Aseta asetukset palvelimelle.** Kaksi vaihtoehtoa:
+3. **Luo `config.php` web-hotellin juureen** (`public_html`:n yläpuolelle):
 
-   **A) Ympäristömuuttujina** (jos hosting tukee niitä):
-   - cPanelin "Environment Variables" tai vastaavasta paneelista lisää:
-     - `DIGITRANSIT_API_KEY` = avain
-     - `DIGITRANSIT_ENDPOINT` = GraphQL-rajapinnan URL
-     - `ALLOWED_ORIGIN` = sivustosi osoite, esim. `https://oma-domain.fi`
+   - Avaa hostin tiedostonhallinta (cPanel File Manager, FTP/SFTP, jne.)
+   - Siirry `/home/käyttäjä/`-tasoon (sama kansio missä `public_html` näkyy)
+   - Luo uusi tiedosto `config.php`
+   - Kopioi seuraava sisältö ja täytä arvot:
 
-   **B) `config.php`-tiedostona** (toimii kaikilla PHP-hostingeilla):
-   - Hostin tiedostonhallinnassa, mene `public_html/api/`-kansioon.
-   - Kopioi `config.example.php` → `config.php`.
-   - Täytä `digitransit_api_key`, `digitransit_endpoint` ja halutessasi
-     `allowed_origin`.
-   - **`config.php` ei saa päätyä git-repoon** (on `.gitignore`:ssa).
+   ```php
+   <?php
+   // config.php - web-hotellin juuressa (public_html:n yläpuolella)
+   
+   return [
+       'digitransit_api_key' => 'your-api-key-here',
+       'digitransit_endpoint' => 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/',
+       'allowed_origin' => 'https://oma-domain.fi',
+   ];
+   ```
 
-4. **Tarkista että suojaus toimii:**
-   `https://oma-domain.fi/api/config.php` → 403 Forbidden.
-   `https://oma-domain.fi/api/config.example.php` → 403 Forbidden.
+4. **Päivitä `digitransit.php`:ssä config-tiedoston polku:**
 
-5. **Käytä** sovellusta normaalisti osoitteessa `https://oma-domain.fi/`.
+   Jos `digitransit.php` on `public_html/api/`-kansiossa, muuta polku:
+
+   ```php
+   $configFile = realpath(__DIR__ . '/../../config.php');
+   if (!$configFile || !file_exists($configFile)) {
+       http_response_code(500);
+       die('Config file not found');
+   }
+   ```
+
+   - `__DIR__` = `public_html/api` (tämän tiedoston kansio)
+   - `/../../config.php` = mennään kaksi tasoa ylös ja etsitään `config.php`
+
+5. **Suojaa tiedostot:**
+
+   Lisää `public_html/`-juureen `.htaccess`-tiedosto:
+
+   ```apache
+   <Files ".env">
+       Order allow,deny
+       Deny from all
+   </Files>
+   <FilesMatch "\.example\.php$">
+       Order allow,deny
+       Deny from all
+   </FilesMatch>
+   ```
+
+6. **Aseta ympäristömuuttujat** (jos hosting tukee niitä):
+
+   cPanelin "Environment Variables" tai vastaavasta paneelista lisää:
+   - `DIGITRANSIT_API_KEY` = avain
+   - `DIGITRANSIT_ENDPOINT` = GraphQL-rajapinnan URL
+   - `ALLOWED_ORIGIN` = sivustosi osoite, esim. `https://oma-domain.fi`
+
+   (Jos et käytä ympäristömuuttujia, käytä `config.php`:tä edellä kuvatulla tavalla.)
+
+7. **Tarkista että suojaus toimii:**
+
+   ```
+   https://oma-domain.fi/config.php → 404 (ei näy: on yläpuolella!)
+   https://oma-domain.fi/digitransit.php → 500 tai muuttaa sisällön (ei näy avaimena)
+   https://oma-domain.fi/ → sovellus toimii normaalisti ✓
+   ```
+
+8. **Käytä** sovellusta normaalisti osoitteessa `https://oma-domain.fi/`.
 
 ### Avaimen vaihto / rotatointi
 
-Korvaa `public_html/api/config.php`:n `digitransit_api_key`-arvo (tai
-`DIGITRANSIT_API_KEY`-ympäristömuuttuja) uudella avaimella ja generoi
+Korvaa web-hotellin juuressa olevan `config.php`:n `digitransit_api_key`-arvo
+(tai `DIGITRANSIT_API_KEY`-ympäristömuuttuja) uudella avaimella ja generoi
 vanha tilalle Digitransit-portaalista. Sovellusta ei tarvitse kääntää
 uudelleen.
 
@@ -167,8 +229,9 @@ sivulatausten yli.
 - CORS-suojaus: `ALLOWED_ORIGIN`-muuttuja rajaa pyynnöt vain omalta
   sivustolta tuleviin.
 - Asetukset (avain, endpoint, origin) ovat palvelimella joko
-  ympäristömuuttujissa tai `api/config.php`:ssa. `.htaccess` estää
-  config-tiedoston suoran latauksen.
+  ympäristömuuttujissa tai `config.php`:ssa, joka sijoitetaan web-rootin
+  yläpuolelle (`public_html`-kansion yläpuolelle) turvallisuuden vuoksi.
+  `.htaccess` estää muiden sensitiivisten tiedostojen suoran latauksen.
 - Dev-tilassa Vite-server proxyttää `/api/digitransit.php`-kutsut suoraan
   Digitransitiin ja injektoi avaimen `.env`-tiedostosta.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
