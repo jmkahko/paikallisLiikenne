@@ -19,7 +19,9 @@ export default function StopSearch({ onSelect, disabled, disabledReason }) {
       setLoading(true)
       try {
         const stops = await searchStops(term)
-        setResults(stops)
+        // Suodata vain Tamperen pysäkit
+        const filteredStops = stops.filter(s => s.gtfsId.startsWith('tampere:'))
+        setResults(filteredStops)
         setError(null)
       } catch (e) {
         setError(e.message)
