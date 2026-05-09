@@ -70,7 +70,8 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     └── components/
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
-        └── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
+        ├── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
+        └── About.jsx          # About-modale (tiedot, lisenssi, vastuuvapautus)
 ```
 
 **Web-hotellissa:**
@@ -149,6 +150,7 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Uusi käyttäjälle näkyvä toiminto | README:n "Ominaisuudet"-lista; tarvittaessa "Pysäkkien lisääminen" |
 | Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto" |
 | Uusi komponentti tai tiedosto | Tämän CLAUDE.md:n "Hakemistorakenne" |
+| About-sivu tai modal-sisältö muuttuu | `src/components/About.jsx` (sisältö), `src/styles.css` (modal-tyylit), README:n "Ominaisuudet" jos relevantti |
 | Digitransit-päätepisteen URL muuttuu | `.env` (`DIGITRANSIT_ENDPOINT`), `config.example.php`. Ei kovakoodattu PHP:ssä, Vitessä tai docker-composessa. |
 | Selainpuolen ENDPOINT muuttuu | `src/api/digitransit.js` (`ENDPOINT`-vakio), `vite.config.js`-proxy-polun avain ja PHP-tiedoston sijainti (`public/api/digitransit.php`) pysyvät synkassa. |
 | PHP-proxy lisää uusia kenttiä/headeria | Päivitä sekä `public/api/digitransit.php` **että** `vite.config.js`:n dev-proxy `headers`. |
@@ -175,9 +177,9 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
   käyttää muuttujanimeä `DIGITRANSIT_API_KEY` (ilman prefixiä) ja
   Vite-dev-palvelin lukee sen `loadEnv`:lla. **Älä koskaan käytä
   `VITE_DIGITRANSIT_API_KEY`-nimeä** — se paljastaisi avaimen.
-- **PHP-proxyn testaus paikallisesti**: `npm run preview` ei aja PHP:tä,
-  joten käytä `docker compose up --build` (8080) tai
-  `php -S 0.0.0.0:8080 -t dist`.
+- **PHP-proxyn testaus paikallisesti**: `npm run preview` toimii PHP-proxyn
+  kanssa ja palvelee sovellusta portissa 4173. Voit myös käyttää `docker
+  compose up --build` (8080) tai `php -S 0.0.0.0:8080 -t dist`.
 - **`config.php` ei git-repoon**: tarkista `.gitignore` ennen committia
   että `config.php` ei näy `git status`:ssa. Web-hotellissa se luodaan
   palvelimella web-rootin yläpuolelle (`/home/käyttäjä/config.php`).

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import StopSearch from './components/StopSearch.jsx'
 import StopCard from './components/StopCard.jsx'
 import PrivacyBanner from './components/PrivacyBanner.jsx'
+import About from './components/About.jsx'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 
 const MAX_STOPS = 6
@@ -8,6 +10,7 @@ const STORAGE_KEY = 'paikallis.stops.v1'
 
 export default function App() {
   const [stops, setStops] = useLocalStorage(STORAGE_KEY, [])
+  const [aboutOpen, setAboutOpen] = useState(false)
 
   function addStop(stop) {
     setStops((prev) => {
@@ -47,12 +50,24 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>
-          <span aria-hidden="true">🚋</span> Paikallisliikenne
-        </h1>
-        <p className="app__subtitle">
-          Reaaliaikaiset Nysse-lähdöt — valitse jopa {MAX_STOPS} pysäkkiä.
-        </p>
+        <div className="app__header-content">
+          <div>
+            <h1>
+              <span aria-hidden="true">🚋</span> Paikallisliikenne
+            </h1>
+            <p className="app__subtitle">
+              Reaaliaikaiset Nysse-lähdöt — valitse jopa {MAX_STOPS} pysäkkiä.
+            </p>
+          </div>
+          <button
+            className="app__about-btn"
+            onClick={() => setAboutOpen(true)}
+            aria-label="Tietoja sovelluksesta"
+            title="Tietoja sovelluksesta"
+          >
+            ℹ️
+          </button>
+        </div>
       </header>
 
       <section className="controls">
@@ -91,18 +106,34 @@ export default function App() {
       )}
 
       <PrivacyBanner />
+      <About isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       <footer className="app__footer">
         <p>
-          Tiedot:{' '}
-          <a
+          Tiedot: © <a
             href="https://digitransit.fi/"
             target="_blank"
             rel="noreferrer"
           >
             Digitransit
           </a>{' '}
-          / Nysse (Tampere). Aineistolisenssi CC BY 4.0.
+          {new Date().getFullYear()}/{' '}
+          <a
+            href="https://www.nysse.fi/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Nysse (Tampere)
+          </a>
+          . Aineistolisenssi{' '}
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CC BY 4.0
+          </a>
+          .
         </p>
       </footer>
     </div>

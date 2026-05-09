@@ -1,0 +1,111 @@
+export default function About({ isOpen, onClose }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__header">
+          <h2>Tietoja sovelluksesta</h2>
+          <button
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Sulje"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="modal__content">
+          <section className="modal__section">
+            <h3>Tietosuoja</h3>
+            <p>
+              Tämä sovellus tallentaa valitsemasi pysäkit selaimen paikalliseen
+              tallennustilaan (<code>localStorage</code>), jotta ne säilyvät
+              sivulatausten välillä. Tietoja ei lähetetä ulkopuolisille
+              palvelimille eikä evästeitä käytetä. Pysäkkitiedot haetaan
+              Digitransit-rajapinnasta oman palvelimen kautta.
+            </p>
+          </section>
+
+          <section className="modal__section">
+            <h3>Reaaliaikainen data</h3>
+            <p>
+              Kaikki bussi- ja raitiovaunujen lähtötiedot haetaan{' '}
+              <a
+                href="https://digitransit.fi/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                Digitransit-rajapinnan
+              </a>{' '}
+              kautta ja päivitetään 30 sekunnin välein. Sovellus tai sen
+              kehittäjät eivät ole vastuussa tietojen oikeellisuudesta,
+              ajantasaisuudesta tai käytöstä johtuneista vahingoista.
+            </p>
+          </section>
+
+          <section className="modal__section">
+            <h3>Lähdekoodi</h3>
+            <p>
+              Sovellus on avoimen lähdekoodin projekti. Voit katsoa koodin
+              GitHubissa:
+            </p>
+            <a
+              href="https://github.com/jmkahko/paikallisLiikenne"
+              target="_blank"
+              rel="noreferrer"
+              className="modal__link"
+            >
+              github.com/jmkahko/paikallisLiikenne →
+            </a>
+          </section>
+
+          <section className="modal__section">
+            <h3>Lisenssit ja tiedot</h3>
+            <p>
+              Sovellus © kahkonen.dev, avoimen lähdekoodin projekti.
+            </p>
+            <p>
+              Tiedot: © <a
+                href="https://digitransit.fi/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                Digitransit
+              </a>{' '}
+              {new Date().getFullYear()},{' '}
+              <a
+                href="https://creativecommons.org/licenses/by/4.0/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                CC BY 4.0
+              </a>
+            </p>
+            <p>
+              Katso{' '}
+              <a
+                href="https://digitransit.fi/en/developers/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                Digitransit Terms of Use
+              </a>
+              .
+            </p>
+          </section>
+        </div>
+
+        <div className="modal__footer">
+          <button className="modal__btn-close" onClick={onClose}>
+            Sulje
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

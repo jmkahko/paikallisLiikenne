@@ -506,12 +506,218 @@ a {
   opacity: 0.85;
 }
 
+/* ---- Modal ---- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal__header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.15s;
+}
+
+.modal__close:hover {
+  color: var(--text);
+}
+
+.modal__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.modal__section {
+  margin-bottom: 1.5rem;
+}
+
+.modal__section:last-child {
+  margin-bottom: 0;
+}
+
+.modal__section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.modal__section p {
+  margin: 0 0 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.modal__section p:last-child {
+  margin-bottom: 0;
+}
+
+.modal__section code {
+  background: var(--card);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  color: var(--text);
+}
+
+.modal__link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.modal__link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.modal__link-inline {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+
+.modal__link-inline:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.modal__footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal__btn-close {
+  padding: 0.75rem 2rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modal__btn-close:hover {
+  opacity: 0.85;
+}
+
+.app__header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.app__about-btn {
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+
+.app__about-btn:hover {
+  opacity: 1;
+  background: var(--card);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 @media (max-width: 480px) {
   .app {
     padding: 1.25rem 0.75rem 3rem;
   }
   .app__header h1 {
     font-size: 1.5rem;
+  }
+  .app__header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .app__about-btn {
+    align-self: flex-start;
   }
   .stop-card__name {
     font-size: 1rem;
@@ -527,5 +733,20 @@ a {
   .privacy-banner__btn {
     width: 100%;
     text-align: center;
+  }
+  .modal {
+    max-height: 90vh;
+  }
+  .modal__header {
+    padding: 1.25rem;
+  }
+  .modal__header h2 {
+    font-size: 1.25rem;
+  }
+  .modal__content {
+    padding: 1.25rem;
+  }
+  .modal__footer {
+    padding: 1rem 1.25rem;
   }
 }

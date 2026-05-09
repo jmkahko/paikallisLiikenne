@@ -26,6 +26,8 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   sovellus tallentaa pysäkkivalinnat selaimen `localStorage`:en. Ei evästeitä,
   ei analytiikkaa, ei tietojen lähetystä ulkopuolisille. Ilmoituksen voi
   sulkea ja valinta muistetaan.
+- **About-sivu** — modale, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
+  ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
 
 ## 1. API-avaimen hankinta
 
@@ -249,5 +251,8 @@ sisältö on niin ikään Clauden tuottamaa.
 
 ## Lisenssi & lähteet
 
-Aineisto: © Tampereen seudun joukkoliikenne / Digitransit, lisenssi
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+**Aineiston lähde:** [Digitransit](https://digitransit.fi/) / Tampereen seudun joukkoliikenne
+
+**Aineisto:** © Digitransit 2026, lisenssi [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+Lue [Digitransit Terms of Use](https://digitransit.fi/en/developers/) saadaksesi lisätietoja API:n käytöstä ja tietojen lisensoinnista.
