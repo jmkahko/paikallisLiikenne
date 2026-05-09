@@ -64,11 +64,8 @@ avaimen palvelinpuolella, joten avain pysyy palvelimella myös devissä.
 
 ```bash
 npm run build      # luo dist/-kansion (sis. dist/api/digitransit.php)
-npm run preview    # esikatselu — HUOM: ei aja PHP:tä, /api ei toimi
+npm run preview    # esikatselu
 ```
-
-PHP-proxyn testaamiseen käytä Dockeria (alla) tai aja erikseen
-`php -S 0.0.0.0:8080 -t dist`.
 
 ## 3. Web-hotelli-simulaatio (Docker)
 
