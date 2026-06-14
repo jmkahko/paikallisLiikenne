@@ -171,10 +171,20 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 Versio tehdään **useammasta korjauksesta/issuesta kerralla** — älä luo omaa
 versiota jokaisesta yksittäisestä issuesta. Kerää valmiit muutokset
 `CHANGELOG.md`:n `[Ei julkaistu]`-osioon, ja kun kasassa on mielekäs kokonaisuus,
-nosta versio (siirrä `[Ei julkaistu]` → `[X.Y.Z]` päivämäärällä, päivitä
-`src/changelog.js` ja `package.json`, luo git-tagi `vX.Y`). Yksittäiset issuet
-voi mainita versiomerkinnän kohdalla (esim. `([#7])`), mutta ne eivät kukin
-ansaitse omaa julkaisuaan.
+nosta versio. Yksittäiset issuet voi mainita versiomerkinnän kohdalla
+(esim. `([#7])`), mutta ne eivät kukin ansaitse omaa julkaisuaan.
+
+**Versionnoston vaiheet** (omassa `release-vX.Y.Z`-haarassa + PR, squash-merge):
+
+1. Siirrä `CHANGELOG.md`:n `[Ei julkaistu]` → `[X.Y.Z] - PVM` ja päivitä
+   compare-linkit. Jätä tyhjä `[Ei julkaistu]` tulevalle.
+2. Päivitä `src/changelog.js` (`APP_VERSION` + `APP_RELEASE_DATE`) ja
+   `package.json` `version`.
+3. Mergen jälkeen: luo annotoitu git-tagi `vX.Y` mainiin ja pushaa se.
+4. Tee GitHub Release tagista:
+   `gh release create vX.Y --verify-tag --title "vX.Y.Z" --notes <CHANGELOG-osio>`.
+
+Git-haarat poistetaan mergen jälkeen (squash-PR, `--delete-branch`).
 
 ## Yleisiä sudenkuoppia
 
