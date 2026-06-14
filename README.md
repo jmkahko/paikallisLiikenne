@@ -11,7 +11,9 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 
 - Pysäkkihaku nimellä tai pysäkkikoodilla.
 - Jopa 6 pysäkkiä rinnakkain. Pysäkit tallennetaan selaimeen.
-- Seuraavat 5 lähtöä per pysäkki: linja, määränpää, lähtöaika ja "min"-laskuri.
+- Seuraavat lähdöt per pysäkki: linja, määränpää, lähtöaika ja "min"-laskuri.
+  Näytettävien lähtöjen määrän (1–5) voi valita itse — kätevää kapealla
+  puhelimen näytöllä. Valinta tallennetaan selaimeen.
 - Reaaliaikamerkki (vihreä piste) kun aikataulutieto on liikenteen GPS:stä.
 - Automaattinen päivitys 30 sekunnin välein. Manuaalinen päivitys napilla.
 - Polling pysähtyy, kun välilehti ei ole näkyvissä (Page Visibility API),

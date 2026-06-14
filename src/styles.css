@@ -109,10 +109,40 @@ a {
   gap: 0.5rem;
 }
 
+.controls__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
 .controls__count {
   margin: 0;
   color: var(--text-dim);
   font-size: 0.85rem;
+}
+
+.controls__departures {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.controls__departures select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.controls__departures select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* ---- Stop search ---- */
