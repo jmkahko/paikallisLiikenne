@@ -12,7 +12,17 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 ## [Ei julkaistu]
 
 ### Lisätty
-- Muutosloki (`CHANGELOG.md`) ja versiohistoria-osio Tietoja-ikkunaan.
+- Muutosloki (`CHANGELOG.md`) ja versiotieto Tietoja-ikkunaan (käytössä oleva
+  versio, julkaisupäivä ja linkki täyteen versiohistoriaan).
+
+### Korjattu
+- Pysäkkihaku: lyhyellä hakusanalla ei enää jäänyt tuloksetta. Tampereen
+  pysäkit suodatetaan nyt ennen 15 tuloksen rajausta (aiemmin muiden
+  Waltti-kaupunkien osumat söivät kiintiön). ([#7])
+- Pysäkin haku koodilla toimii nyt (esim. `0001`) — numerohaku tehdään
+  suoraan pysäkki-id:llä, koska nimihaku ei täsmää koodiin. ([#7])
+- Haku kertoo montako merkkiä pitää vähintään syöttää ja ilmoittaa
+  selkeästi, jos haulla ei löydy pysäkkejä. ([#7])
 
 ## [1.2.0] - 2026-05-09
 
@@ -50,5 +60,6 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [1.1.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.0...v1.1
 [1.0.0]: https://github.com/jmkahko/paikallisLiikenne/releases/tag/v1.0
 [#1]: https://github.com/jmkahko/paikallisLiikenne/issues/1
+[#7]: https://github.com/jmkahko/paikallisLiikenne/issues/7
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6
