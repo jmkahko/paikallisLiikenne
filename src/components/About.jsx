@@ -1,3 +1,5 @@
+import { APP_VERSION, APP_RELEASE_DATE, CHANGELOG_URL } from '../changelog'
+
 export default function About({ isOpen, onClose }) {
   if (!isOpen) return null
 
@@ -5,7 +7,10 @@ export default function About({ isOpen, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
-          <h2>Tietoja sovelluksesta</h2>
+          <h2>
+            Tietoja sovelluksesta{' '}
+            <span className="modal__version">v{APP_VERSION}</span>
+          </h2>
           <button
             className="modal__close"
             onClick={onClose}
@@ -58,6 +63,22 @@ export default function About({ isOpen, onClose }) {
               className="modal__link"
             >
               github.com/jmkahko/paikallisLiikenne →
+            </a>
+          </section>
+
+          <section className="modal__section">
+            <h3>Versio</h3>
+            <p>
+              Käytössä <strong>v{APP_VERSION}</strong> (julkaistu{' '}
+              {APP_RELEASE_DATE}).
+            </p>
+            <a
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="modal__link"
+            >
+              Katso versiohistoria →
             </a>
           </section>
 

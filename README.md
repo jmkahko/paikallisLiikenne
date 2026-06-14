@@ -28,6 +28,8 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   sulkea ja valinta muistetaan.
 - **About-sivu** — modale, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
   ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
+- **Versiotieto** — About-ikkunassa näkyy käytössä oleva versio ja julkaisupäivä
+  sekä linkki täyteen versiohistoriaan: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 1. API-avaimen hankinta
 

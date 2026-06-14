@@ -1,7 +1,7 @@
 {
   "name": "paikallis-liikenne",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "Nysse-pysäkkien reaaliaikainen seuranta (Tampere)",
   "scripts": {

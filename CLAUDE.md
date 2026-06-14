@@ -53,6 +53,7 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
 ├── docker-compose.yml       # `docker compose up` käynnistys
 ├── .dockerignore            # node_modules, dist, .env, config.php pois imageen
 ├── README.md                # Käyttäjäohjeet (asennus, API-avain, julkaisu)
+├── CHANGELOG.md             # Muutosloki (Keep a Changelog), kanoninen versiohistoria
 ├── CLAUDE.md                # Tämä tiedosto
 ├── public/
 │   └── api/
@@ -62,6 +63,7 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     ├── main.jsx             # React-juuren bootstrap
     ├── App.jsx              # Sovelluksen päärakenne, tila, layout
     ├── styles.css           # Kaikki tyylit (CSS-muuttujat juuressa)
+    ├── changelog.js         # Versiotiedot About-modaaliin (versio, julkaisupäivä, CHANGELOG-linkki)
     ├── api/
     │   └── digitransit.js   # GraphQL-kutsut omaan /api/digitransit.php:hen
     ├── hooks/
@@ -151,6 +153,7 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto" |
 | Uusi komponentti tai tiedosto | Tämän CLAUDE.md:n "Hakemistorakenne" |
 | About-sivu tai modal-sisältö muuttuu | `src/components/About.jsx` (sisältö), `src/styles.css` (modal-tyylit), README:n "Ominaisuudet" jos relevantti |
+| Uusi julkaisu / versionnosto | `CHANGELOG.md` (kanoninen muutosloki), `src/changelog.js` (`APP_VERSION` + `APP_RELEASE_DATE`), `package.json` `version`. Pidä versionumero samana kaikissa kolmessa ja luo vastaava git-tagi (`vX.Y`). |
 | Digitransit-päätepisteen URL muuttuu | `.env` (`DIGITRANSIT_ENDPOINT`), `config.example.php`. Ei kovakoodattu PHP:ssä, Vitessä tai docker-composessa. |
 | Selainpuolen ENDPOINT muuttuu | `src/api/digitransit.js` (`ENDPOINT`-vakio), `vite.config.js`-proxy-polun avain ja PHP-tiedoston sijainti (`public/api/digitransit.php`) pysyvät synkassa. |
 | PHP-proxy lisää uusia kenttiä/headeria | Päivitä sekä `public/api/digitransit.php` **että** `vite.config.js`:n dev-proxy `headers`. |
@@ -160,6 +163,16 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Tyylimuutokset `:root`-muuttujiin | `src/styles.css` molemmat lohkot (tumma + light-media) |
 | Uusi tiedosto `public/api/`:in | `.htaccess`-suojaus tarvittaessa, README "Julkaisu"-osio jos käyttäjän pitää tehdä jotain palvelimella |
 | Docker-imageen tarvittava lisätyökalu | `Dockerfile` (apt-get install) **ja** README "Web-hotelli-simulaatio (Docker)" -osio |
+
+## Julkaisukäytäntö
+
+Versio tehdään **useammasta korjauksesta/issuesta kerralla** — älä luo omaa
+versiota jokaisesta yksittäisestä issuesta. Kerää valmiit muutokset
+`CHANGELOG.md`:n `[Ei julkaistu]`-osioon, ja kun kasassa on mielekäs kokonaisuus,
+nosta versio (siirrä `[Ei julkaistu]` → `[X.Y.Z]` päivämäärällä, päivitä
+`src/changelog.js` ja `package.json`, luo git-tagi `vX.Y`). Yksittäiset issuet
+voi mainita versiomerkinnän kohdalla (esim. `([#7])`), mutta ne eivät kukin
+ansaitse omaa julkaisuaan.
 
 ## Yleisiä sudenkuoppia
 
