@@ -6,8 +6,8 @@ export const REPO_URL = 'https://github.com/jmkahko/paikallisLiikenne'
 
 // Nykyinen versio ja sen julkaisupäivä.
 // Vastaa package.json:n versiota ja CHANGELOG.md:n uusinta julkaisua.
-export const APP_VERSION = '1.2.0'
-export const APP_RELEASE_DATE = '2026-05-09'
+export const APP_VERSION = '1.3.0'
+export const APP_RELEASE_DATE = '2026-06-14'
 
 // Täysi versiohistoria (mitä missäkin versiossa muuttui).
 export const CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`

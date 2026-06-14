@@ -11,6 +11,8 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 
 ## [Ei julkaistu]
 
+## [1.3.0] - 2026-06-14
+
 ### Lisätty
 - Muutosloki (`CHANGELOG.md`) ja versiotieto Tietoja-ikkunaan (käytössä oleva
   versio, julkaisupäivä ja linkki täyteen versiohistoriaan).
@@ -61,7 +63,8 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 - Tietosuojailmoitus-banneri ja vaalea/tumma teema järjestelmäasetuksen mukaan.
 - Docker-pohjainen web-hotellisimulaatio (`docker compose up`).
 
-[Ei julkaistu]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.2...HEAD
+[Ei julkaistu]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.3...HEAD
+[1.3.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.2...v1.3
 [1.2.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.1...v1.2
 [1.1.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.0...v1.1
 [1.0.0]: https://github.com/jmkahko/paikallisLiikenne/releases/tag/v1.0
