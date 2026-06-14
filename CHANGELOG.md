@@ -14,6 +14,9 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 ### Lisätty
 - Muutosloki (`CHANGELOG.md`) ja versiotieto Tietoja-ikkunaan (käytössä oleva
   versio, julkaisupäivä ja linkki täyteen versiohistoriaan).
+- Mahdollisuus valita näytettävien lähtöjen määrä (1–5) per pysäkki —
+  parantaa käyttökokemusta kapealla puhelimen näytöllä. Valinta tallennetaan
+  selaimeen. ([#4])
 
 ### Korjattu
 - Pysäkkihaku: lyhyellä hakusanalla ei enää jäänyt tuloksetta. Tampereen
@@ -60,6 +63,7 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [1.1.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.0...v1.1
 [1.0.0]: https://github.com/jmkahko/paikallisLiikenne/releases/tag/v1.0
 [#1]: https://github.com/jmkahko/paikallisLiikenne/issues/1
+[#4]: https://github.com/jmkahko/paikallisLiikenne/issues/4
 [#7]: https://github.com/jmkahko/paikallisLiikenne/issues/7
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6

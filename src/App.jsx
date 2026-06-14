@@ -7,9 +7,16 @@ import { useLocalStorage } from './hooks/useLocalStorage.js'
 
 const MAX_STOPS = 6
 const STORAGE_KEY = 'paikallis.stops.v1'
+const DEPARTURE_COUNT_KEY = 'paikallis.departureCount.v1'
+const DEFAULT_DEPARTURE_COUNT = 5
+const DEPARTURE_COUNT_OPTIONS = [1, 2, 3, 4, 5]
 
 export default function App() {
   const [stops, setStops] = useLocalStorage(STORAGE_KEY, [])
+  const [departureCount, setDepartureCount] = useLocalStorage(
+    DEPARTURE_COUNT_KEY,
+    DEFAULT_DEPARTURE_COUNT
+  )
   const [aboutOpen, setAboutOpen] = useState(false)
 
   function addStop(stop) {
@@ -80,9 +87,25 @@ export default function App() {
               : null
           }
         />
-        <p className="controls__count">
-          {stops.length} / {MAX_STOPS} pysäkkiä
-        </p>
+        <div className="controls__row">
+          <p className="controls__count">
+            {stops.length} / {MAX_STOPS} pysäkkiä
+          </p>
+          <div className="controls__departures">
+            <label htmlFor="departure-count">Lähtöjä per pysäkki</label>
+            <select
+              id="departure-count"
+              value={departureCount}
+              onChange={(e) => setDepartureCount(Number(e.target.value))}
+            >
+              {DEPARTURE_COUNT_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </section>
 
       {stops.length === 0 ? (
@@ -96,6 +119,7 @@ export default function App() {
             <StopCard
               key={stop.gtfsId}
               stop={stop}
+              departureCount={departureCount}
               isFirst={idx === 0}
               isLast={idx === stops.length - 1}
               onRemove={() => removeStop(stop.gtfsId)}

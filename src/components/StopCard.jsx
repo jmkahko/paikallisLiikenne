@@ -24,11 +24,11 @@ function formatClock(date) {
   return date.toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function StopCard({ stop, onRemove, onMove, isFirst, isLast }) {
+export default function StopCard({ stop, departureCount = 5, onRemove, onMove, isFirst, isLast }) {
   const { data, error, loading, lastUpdated, refresh } = useDepartures(
     stop.gtfsId,
     30_000,
-    5
+    departureCount
   )
   const [now, setNow] = useState(() => new Date())
 
