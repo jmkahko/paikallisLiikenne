@@ -50,7 +50,29 @@ const STOP_SEARCH_QUERY = /* GraphQL */ `
   }
 `
 
+// Koodihaku: stops(name:) ei täsmää pysäkkikoodiin, joten numerokoodi
+// haetaan suoraan id:llä (tampere:<koodi>). Tampereella code vastaa aina
+// gtfsId:n loppuosaa.
+const STOP_BY_ID_QUERY = /* GraphQL */ `
+  query StopById($id: String!) {
+    stop(id: $id) {
+      gtfsId
+      name
+      code
+      desc
+      vehicleMode
+      lat
+      lon
+    }
+  }
+`
+
+const TAMPERE_FEED = 'tampere'
 const MAX_SEARCH_RESULTS = 15
+
+function isTampereStop(stop) {
+  return !!stop && stop.gtfsId.startsWith(`${TAMPERE_FEED}:`)
+}
 
 const STOP_DEPARTURES_QUERY = /* GraphQL */ `
   query StopDepartures($id: String!, $n: Int!) {
@@ -82,15 +104,27 @@ const STOP_DEPARTURES_QUERY = /* GraphQL */ `
 `
 
 /**
- * Etsi pysäkkejä nimen tai koodin perusteella.
- * @param {string} term - hakusana (esim. "Keskustori" tai "0501")
+ * Etsi pysäkkejä nimen tai koodin perusteella. Palauttaa vain Tampereen
+ * pysäkit (rajapinta kattaa koko Waltti-alueen, monta kaupunkia).
+ * @param {string} term - hakusana (esim. "Keskustori" tai "0001")
  * @returns {Promise<Array>}
  */
 export async function searchStops(term) {
   const trimmed = term.trim()
   if (!trimmed) return []
+
+  // Pelkkä numerosarja tulkitaan pysäkkikoodiksi → suora id-haku.
+  if (/^\d+$/.test(trimmed)) {
+    const data = await gqlFetch(STOP_BY_ID_QUERY, {
+      id: `${TAMPERE_FEED}:${trimmed}`
+    })
+    return isTampereStop(data?.stop) ? [data.stop] : []
+  }
+
+  // Nimihaku: suodatetaan Tampere ENNEN tulosten rajaamista, jotta muiden
+  // kaupunkien pysäkit eivät syö 15 tuloksen kiintiötä.
   const data = await gqlFetch(STOP_SEARCH_QUERY, { name: trimmed })
-  return (data.stops || []).slice(0, MAX_SEARCH_RESULTS)
+  return (data.stops || []).filter(isTampereStop).slice(0, MAX_SEARCH_RESULTS)
 }
 
 /**
