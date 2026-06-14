@@ -2,14 +2,19 @@
 
 Kaikki projektin merkittävät muutokset dokumentoidaan tässä tiedostossa.
 
-Muoto perustuu [Keep a Changelog](https://keepachangelog.com/fi/1.1.0/)
--käytäntöön ja projekti noudattaa [semanttista versiointia](https://semver.org/lang/fi/).
+Muoto perustuu [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+-käytäntöön ja projekti noudattaa [semanttista versiointia](https://semver.org/).
 
 Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunasta
 (ℹ️-nappi oikeassa yläkulmassa). Avoimet kehitysideat ja havainnot ovat
 [GitHubin Issues-välilehdellä](https://github.com/jmkahko/paikallisLiikenne/issues).
 
 ## [Ei julkaistu]
+
+### Korjattu
+- CHANGELOG.md:n johdannon linkit Keep a Changelog- ja semanttinen versiointi
+  -sivuihin osoittivat olemattomiin suomenkielisiin käännöksiin (404).
+  Vaihdettu toimiviin kanonisiin sivuihin. ([#16])
 
 ## [1.3.0] - 2026-06-14
 
@@ -74,3 +79,4 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#8]: https://github.com/jmkahko/paikallisLiikenne/issues/8
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6
+[#16]: https://github.com/jmkahko/paikallisLiikenne/issues/16
