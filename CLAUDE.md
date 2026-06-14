@@ -68,10 +68,12 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     │   └── digitransit.js   # GraphQL-kutsut omaan /api/digitransit.php:hen
     ├── hooks/
     │   ├── useLocalStorage.js   # Yleinen localStorage-hook
-    │   └── useDepartures.js     # Pollaa pysäkin lähtöjä, näkyvyystietoinen
+    │   ├── useDepartures.js     # Pollaa pysäkin lähtöjä, näkyvyystietoinen
+    │   └── useAlerts.js         # Pollaa häiriötiedotteita (60 s), näkyvyystietoinen
     └── components/
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
+        ├── Alerts.jsx         # Häiriötiedotteet: avattava paneeli + "kaikki"-modaali
         ├── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
         └── About.jsx          # About-modale (tiedot, lisenssi, vastuuvapautus)
 ```
