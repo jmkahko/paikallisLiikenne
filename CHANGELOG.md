@@ -17,6 +17,9 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 - Mahdollisuus valita näytettävien lähtöjen määrä (1–5) per pysäkki —
   parantaa käyttökokemusta kapealla puhelimen näytöllä. Valinta tallennetaan
   selaimeen. ([#4])
+- Häiriötiedotteet: avattava paneeli näyttää valittuihin pysäkkeihin
+  vaikuttavat häiriöt, ja modaalista näkee kaikki Tampereen tiedotteet.
+  Päivittyy automaattisesti. ([#8])
 
 ### Korjattu
 - Pysäkkihaku: lyhyellä hakusanalla ei enää jäänyt tuloksetta. Tampereen
@@ -65,5 +68,6 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#1]: https://github.com/jmkahko/paikallisLiikenne/issues/1
 [#4]: https://github.com/jmkahko/paikallisLiikenne/issues/4
 [#7]: https://github.com/jmkahko/paikallisLiikenne/issues/7
+[#8]: https://github.com/jmkahko/paikallisLiikenne/issues/8
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6

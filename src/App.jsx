@@ -3,7 +3,9 @@ import StopSearch from './components/StopSearch.jsx'
 import StopCard from './components/StopCard.jsx'
 import PrivacyBanner from './components/PrivacyBanner.jsx'
 import About from './components/About.jsx'
+import Alerts from './components/Alerts.jsx'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
+import { useAlerts } from './hooks/useAlerts.js'
 
 const MAX_STOPS = 6
 const STORAGE_KEY = 'paikallis.stops.v1'
@@ -18,6 +20,8 @@ export default function App() {
     DEFAULT_DEPARTURE_COUNT
   )
   const [aboutOpen, setAboutOpen] = useState(false)
+  const { alerts, error: alertsError, loading: alertsLoading } = useAlerts()
+  const selectedStopIds = new Set(stops.map((s) => s.gtfsId))
 
   function addStop(stop) {
     setStops((prev) => {
@@ -107,6 +111,13 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      <Alerts
+        alerts={alerts}
+        loading={alertsLoading}
+        error={alertsError}
+        selectedStopIds={selectedStopIds}
+      />
 
       {stops.length === 0 ? (
         <div className="empty-state">

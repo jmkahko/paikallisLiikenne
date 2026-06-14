@@ -103,6 +103,53 @@ const STOP_DEPARTURES_QUERY = /* GraphQL */ `
   }
 `
 
+// Häiriötiedotteet rajataan Tampereen feediin palvelinpuolella. Tiedotteet
+// kytkeytyvät pysäkkeihin (entities) — Tampereella route on yleensä tyhjä.
+const ALERTS_QUERY = /* GraphQL */ `
+  query Alerts {
+    alerts(feeds: ["${TAMPERE_FEED}"]) {
+      id
+      alertSeverityLevel
+      alertEffect
+      effectiveStartDate
+      effectiveEndDate
+      alertHeaderText(language: "fi")
+      alertDescriptionText(language: "fi")
+      alertUrl(language: "fi")
+      route { shortName }
+      stop { gtfsId }
+      entities {
+        __typename
+        ... on Stop { gtfsId name }
+        ... on Route { shortName }
+      }
+    }
+  }
+`
+
+function normalizeAlert(a) {
+  const stopIds = new Set()
+  const routeNames = new Set()
+  if (a.stop?.gtfsId) stopIds.add(a.stop.gtfsId)
+  if (a.route?.shortName) routeNames.add(a.route.shortName)
+  for (const e of a.entities || []) {
+    if (e.__typename === 'Stop' && e.gtfsId) stopIds.add(e.gtfsId)
+    if (e.__typename === 'Route' && e.shortName) routeNames.add(e.shortName)
+  }
+  return {
+    id: a.id,
+    severity: a.alertSeverityLevel || 'UNKNOWN_SEVERITY',
+    effect: a.alertEffect || null,
+    header: a.alertHeaderText || '',
+    description: a.alertDescriptionText || '',
+    url: a.alertUrl || null,
+    start: a.effectiveStartDate ? new Date(a.effectiveStartDate * 1000) : null,
+    end: a.effectiveEndDate ? new Date(a.effectiveEndDate * 1000) : null,
+    stopIds: [...stopIds],
+    routeNames: [...routeNames]
+  }
+}
+
 /**
  * Etsi pysäkkejä nimen tai koodin perusteella. Palauttaa vain Tampereen
  * pysäkit (rajapinta kattaa koko Waltti-alueen, monta kaupunkia).
@@ -165,4 +212,13 @@ export async function getStopDepartures(stopId, numberOfDepartures = 5) {
     },
     departures
   }
+}
+
+/**
+ * Hae Tampereen häiriötiedotteet (kaikki).
+ * @returns {Promise<Array>} normalisoidut tiedotteet
+ */
+export async function getAlerts() {
+  const data = await gqlFetch(ALERTS_QUERY)
+  return (data.alerts || []).map(normalizeAlert)
 }

@@ -28,6 +28,9 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   sovellus tallentaa pysäkkivalinnat selaimen `localStorage`:en. Ei evästeitä,
   ei analytiikkaa, ei tietojen lähetystä ulkopuolisille. Ilmoituksen voi
   sulkea ja valinta muistetaan.
+- **Häiriötiedotteet** — avattava paneeli näyttää valitsemiisi pysäkkeihin
+  vaikuttavat häiriöt, ja "Näytä kaikki" -modaalista näkee kaikki Tampereen
+  tiedotteet. Päivittyy automaattisesti noin minuutin välein.
 - **About-sivu** — modale, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
   ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
 - **Versiotieto** — About-ikkunassa näkyy käytössä oleva versio ja julkaisupäivä
