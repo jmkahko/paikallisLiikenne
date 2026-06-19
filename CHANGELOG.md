@@ -12,6 +12,14 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 ## [Ei julkaistu]
 
 ### Korjattu
+- Häiriötiedotteiden kohdistus valittuihin pysäkkeihin osui aiemmin vain
+  pysäkkikohtaisiin tiedotteisiin. Reittikohtaiset tiedotteet (esim.
+  "raitiovaunu 1") ja koko verkkoa koskevat tiedotteet jäivät virheellisesti
+  pois "valittuja pysäkkejä koskevat" -näkymästä, vaikka linja pysähtyi
+  valitulla pysäkillä. Nyt tiedote tunnistetaan relevantiksi myös reitin
+  perusteella, ja tiedotteessa näytetään sitä koskevat linjat. Tiedotteet
+  myös järjestetään vakavimmasta lievimpään (saman vakavuuden sisällä tuorein
+  ensin), joten Vakava-tiedote ei jää listan loppuun. ([#19])
 - CHANGELOG.md:n johdannon linkit Keep a Changelog- ja semanttinen versiointi
   -sivuihin osoittivat olemattomiin suomenkielisiin käännöksiin (404).
   Vaihdettu toimiviin kanonisiin sivuihin. ([#16])
@@ -80,3 +88,4 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6
 [#16]: https://github.com/jmkahko/paikallisLiikenne/issues/16
+[#19]: https://github.com/jmkahko/paikallisLiikenne/issues/19
