@@ -222,3 +222,34 @@ export async function getAlerts() {
   const data = await gqlFetch(ALERTS_QUERY)
   return (data.alerts || []).map(normalizeAlert)
 }
+
+/**
+ * Hae valittujen pysäkkien reittien lyhytnimet. Tarvitaan reittikohdistettujen
+ * häiriötiedotteiden (esim. "raitiovaunu 1") yhdistämiseen pysäkkiin — tiedote
+ * voi koskea reittiä ilman yhtään Stop-entityä. Kaikki pysäkit haetaan yhdellä
+ * aliasoidulla kyselyllä, joten verkossa käydään vain kerran.
+ * @param {string[]} stopIds - GTFS-pysäkkien id:t (esim. ["tampere:0001"])
+ * @returns {Promise<Object>} map gtfsId → reittien shortName-taulukko
+ */
+export async function getStopRoutes(stopIds) {
+  const ids = [...new Set(stopIds)].filter(Boolean)
+  if (ids.length === 0) return {}
+
+  const varDefs = ids.map((_, i) => `$id${i}: String!`).join(', ')
+  const fields = ids
+    .map((_, i) => `s${i}: stop(id: $id${i}) { gtfsId routes { shortName } }`)
+    .join('\n    ')
+  const query = `query StopRoutes(${varDefs}) {\n    ${fields}\n  }`
+  const variables = Object.fromEntries(ids.map((id, i) => [`id${i}`, id]))
+
+  const data = await gqlFetch(query, variables)
+  const result = {}
+  for (const key of Object.keys(data || {})) {
+    const stop = data[key]
+    if (!stop?.gtfsId) continue
+    result[stop.gtfsId] = (stop.routes || [])
+      .map((r) => r.shortName)
+      .filter(Boolean)
+  }
+  return result
+}

@@ -29,8 +29,11 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   ei analytiikkaa, ei tietojen lähetystä ulkopuolisille. Ilmoituksen voi
   sulkea ja valinta muistetaan.
 - **Häiriötiedotteet** — avattava paneeli näyttää valitsemiisi pysäkkeihin
-  vaikuttavat häiriöt, ja "Näytä kaikki" -modaalista näkee kaikki Tampereen
-  tiedotteet. Päivittyy automaattisesti noin minuutin välein.
+  vaikuttavat häiriöt. Mukaan tulevat myös reittikohtaiset tiedotteet (esim.
+  "raitiovaunu 1"), jos kyseinen linja pysähtyy jollakin valitulla pysäkillä,
+  sekä koko verkkoa koskevat tiedotteet. Tiedotteessa näkyvät sitä koskevat
+  linjat. "Näytä kaikki" -modaalista näkee kaikki Tampereen tiedotteet.
+  Päivittyy automaattisesti noin minuutin välein.
 - **About-sivu** — modale, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
   ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
 - **Versiotieto** — About-ikkunassa näkyy käytössä oleva versio ja julkaisupäivä

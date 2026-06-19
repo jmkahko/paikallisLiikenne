@@ -6,6 +6,7 @@ import About from './components/About.jsx'
 import Alerts from './components/Alerts.jsx'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { useAlerts } from './hooks/useAlerts.js'
+import { useStopRoutes } from './hooks/useStopRoutes.js'
 
 const MAX_STOPS = 6
 const STORAGE_KEY = 'paikallis.stops.v1'
@@ -21,7 +22,9 @@ export default function App() {
   )
   const [aboutOpen, setAboutOpen] = useState(false)
   const { alerts, error: alertsError, loading: alertsLoading } = useAlerts()
-  const selectedStopIds = new Set(stops.map((s) => s.gtfsId))
+  const stopIds = stops.map((s) => s.gtfsId)
+  const selectedStopIds = new Set(stopIds)
+  const { routeNames: selectedRouteNames } = useStopRoutes(stopIds)
 
   function addStop(stop) {
     setStops((prev) => {
@@ -117,6 +120,7 @@ export default function App() {
         loading={alertsLoading}
         error={alertsError}
         selectedStopIds={selectedStopIds}
+        selectedRouteNames={selectedRouteNames}
       />
 
       {stops.length === 0 ? (

@@ -270,6 +270,13 @@ a {
   white-space: nowrap;
 }
 
+.alert-item__routes {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
 .alert-item__header {
   margin: 0 0 0.3rem;
   font-weight: 600;
