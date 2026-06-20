@@ -100,6 +100,39 @@ function isTampereStop(stop) {
   return !!stop && stop.gtfsId.startsWith(`${TAMPERE_FEED}:`)
 }
 
+// Vuoron (trip) reittigeometria ja pysäkit kartalle (issue #9). geometry
+// palautuu valmiina lat/lon-taulukkona, joten polyline-dekoodausta ei tarvita.
+// stoptimesForDate antaa pysäkkikohtaiset (reaaliaika)ajat → vuoron arvioitu
+// eteneminen (mitkä pysäkit ohitettu, missä välissä vaunu on nyt).
+const TRIP_PATTERN_QUERY = /* GraphQL */ `
+  query TripPattern($id: String!) {
+    trip(id: $id) {
+      gtfsId
+      pattern {
+        geometry {
+          lat
+          lon
+        }
+        stops {
+          gtfsId
+          name
+          code
+          lat
+          lon
+        }
+      }
+      stoptimesForDate {
+        realtime
+        realtimeDeparture
+        serviceDay
+        stop {
+          gtfsId
+        }
+      }
+    }
+  }
+`
+
 const STOP_DEPARTURES_QUERY = /* GraphQL */ `
   query StopDepartures($id: String!, $n: Int!) {
     stop(id: $id) {
@@ -217,6 +250,46 @@ export async function getStopsByBbox({ minLat, minLon, maxLat, maxLon }) {
   return (data?.stopsByBbox || []).filter(
     (s) => s && typeof s.lat === 'number' && typeof s.lon === 'number'
   )
+}
+
+/**
+ * Hae vuoron (trip) reittigeometria ja reitin pysäkit kartalle näytettäväksi
+ * (issue #9). Geometria palautuu lat/lon-taulukkona valmiina Leaflet-polylineksi.
+ * @param {string} tripId - vuoron gtfsId (esim. "tampere:121_19227_16714756")
+ * @returns {Promise<{geometry: Array<[number, number]>, stops: Array}|null>}
+ */
+export async function getTripPattern(tripId) {
+  const data = await gqlFetch(TRIP_PATTERN_QUERY, { id: tripId })
+  const trip = data?.trip
+  const pattern = trip?.pattern
+  if (!pattern) return null
+
+  const geometry = (pattern.geometry || [])
+    .filter((p) => p && typeof p.lat === 'number' && typeof p.lon === 'number')
+    .map((p) => [p.lat, p.lon])
+
+  // Yhdistä pysäkin koordinaatit ja reaaliaika-lähtöaika. stoptimesForDate on
+  // samassa järjestyksessä kuin pattern.stops, joten zipataan indeksillä
+  // (kestää myös toistuvat gtfsId:t reitillä). departure on epoch-ms tai null.
+  const times = trip.stoptimesForDate || []
+  const stops = (pattern.stops || [])
+    .map((s, i) => {
+      const t = times[i]
+      const valid =
+        t && typeof t.serviceDay === 'number' && typeof t.realtimeDeparture === 'number'
+      return {
+        gtfsId: s.gtfsId,
+        name: s.name,
+        code: s.code,
+        lat: s.lat,
+        lon: s.lon,
+        departure: valid ? (t.serviceDay + t.realtimeDeparture) * 1000 : null,
+        realtime: t ? !!t.realtime : false
+      }
+    })
+    .filter((s) => typeof s.lat === 'number' && typeof s.lon === 'number')
+
+  return { geometry, stops }
 }
 
 /**
