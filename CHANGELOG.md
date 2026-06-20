@@ -11,6 +11,12 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 
 ## [Ei julkaistu]
 
+### Lisätty
+- Pysäkkien valinta kartalta: pysäkin lisäyksessä on nyt kaksi välilehteä,
+  "Haku" ja "Kartta". Karttavälilehdellä (OpenStreetMap-laatat) näkyvälle
+  alueelle ladataan pysäkit ja yksittäisen voi lisätä klikkaamalla markkeria.
+  Bussi- ja raitiovaunupysäkit erottuvat väreillä. ([#5])
+
 ### Korjattu
 - Häiriötiedotteiden kohdistus valittuihin pysäkkeihin osui aiemmin vain
   pysäkkikohtaisiin tiedotteisiin. Reittikohtaiset tiedotteet (esim.
@@ -83,6 +89,7 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [1.0.0]: https://github.com/jmkahko/paikallisLiikenne/releases/tag/v1.0
 [#1]: https://github.com/jmkahko/paikallisLiikenne/issues/1
 [#4]: https://github.com/jmkahko/paikallisLiikenne/issues/4
+[#5]: https://github.com/jmkahko/paikallisLiikenne/issues/5
 [#7]: https://github.com/jmkahko/paikallisLiikenne/issues/7
 [#8]: https://github.com/jmkahko/paikallisLiikenne/issues/8
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3

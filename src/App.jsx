@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import StopSearch from './components/StopSearch.jsx'
+import StopMap from './components/StopMap.jsx'
 import StopCard from './components/StopCard.jsx'
 import PrivacyBanner from './components/PrivacyBanner.jsx'
 import About from './components/About.jsx'
@@ -21,6 +22,7 @@ export default function App() {
     DEFAULT_DEPARTURE_COUNT
   )
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [addMode, setAddMode] = useState('search') // 'search' | 'map'
   const { alerts, error: alertsError, loading: alertsLoading } = useAlerts()
   const stopIds = stops.map((s) => s.gtfsId)
   const selectedStopIds = new Set(stopIds)
@@ -85,15 +87,45 @@ export default function App() {
       </header>
 
       <section className="controls">
-        <StopSearch
-          onSelect={addStop}
-          disabled={isFull}
-          disabledReason={
-            isFull
-              ? `Maksimimäärä (${MAX_STOPS}) pysäkkiä lisätty. Poista jokin ennen uutta.`
-              : null
-          }
-        />
+        <div className="controls__tabs" role="tablist" aria-label="Pysäkin lisäystapa">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={addMode === 'search'}
+            className={`controls__tab${addMode === 'search' ? ' controls__tab--active' : ''}`}
+            onClick={() => setAddMode('search')}
+          >
+            <span aria-hidden="true">🔍</span> Haku
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={addMode === 'map'}
+            className={`controls__tab${addMode === 'map' ? ' controls__tab--active' : ''}`}
+            onClick={() => setAddMode('map')}
+          >
+            <span aria-hidden="true">🗺️</span> Kartta
+          </button>
+        </div>
+
+        {addMode === 'search' ? (
+          <StopSearch
+            onSelect={addStop}
+            disabled={isFull}
+            disabledReason={
+              isFull
+                ? `Maksimimäärä (${MAX_STOPS}) pysäkkiä lisätty. Poista jokin ennen uutta.`
+                : null
+            }
+          />
+        ) : (
+          <StopMap
+            onSelect={addStop}
+            selectedStopIds={selectedStopIds}
+            isFull={isFull}
+          />
+        )}
+
         <div className="controls__row">
           <p className="controls__count">
             {stops.length} / {MAX_STOPS} pysäkkiä

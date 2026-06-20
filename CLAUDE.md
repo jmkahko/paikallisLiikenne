@@ -19,6 +19,11 @@ Paikallisesti voi simuloida hostingia Dockerissa (`docker compose up`).
 - **React 18** funktionaalisilla komponenteilla ja hookeilla.
 - **Vite 5** dev-palvelin & build-työkalu.
 - **Vanilla CSS** (`src/styles.css`). Ei Tailwindia, ei CSS-in-JS:ää.
+- **Leaflet + react-leaflet** karttanäkymään (pysäkkien valinta kartalta).
+  Karttalaatat **OpenStreetMapista** (julkiset, ei API-avainta) —
+  attribuutio "© OpenStreetMap -tekijät" pakollinen. Pysäkit haetaan
+  `stopsByBbox`-kyselyllä oman PHP-proxyn kautta, ei Digitransit-laattoja
+  (jotta avain pysyy palvelimella).
 - **Fetch + GraphQL POST** oman PHP-proxyn (`/api/digitransit.php`) kautta
   — selain ei kutsu Digitransitia suoraan, eikä avain ole bundlessa.
 - **PHP-proxy** (`public/api/digitransit.php`, tuotannossa `public_html/api/digitransit.php`)
@@ -73,6 +78,7 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     │   └── useStopRoutes.js     # Hakee valittujen pysäkkien reitit (tiedotekohdistus)
     └── components/
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
+        ├── StopMap.jsx        # Pysäkkien valinta kartalta (Leaflet + OSM-laatat)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
         ├── Alerts.jsx         # Häiriötiedotteet: avattava paneeli + "kaikki"-modaali
         ├── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
