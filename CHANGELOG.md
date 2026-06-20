@@ -11,6 +11,8 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 
 ## [Ei julkaistu]
 
+## [1.4.0] - 2026-06-20
+
 ### Lisätty
 - Vuoron reitti kartalla: aikatauluriviä klikkaamalla avautuu kartta, jossa
   näkyy kyseisen linjan reittiviiva, pysäkit, lähtö- ja määränpääpysäkki sekä
@@ -91,7 +93,8 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 - Tietosuojailmoitus-banneri ja vaalea/tumma teema järjestelmäasetuksen mukaan.
 - Docker-pohjainen web-hotellisimulaatio (`docker compose up`).
 
-[Ei julkaistu]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.3...HEAD
+[Ei julkaistu]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.4...HEAD
+[1.4.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.3...v1.4
 [1.3.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.2...v1.3
 [1.2.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.1...v1.2
 [1.1.0]: https://github.com/jmkahko/paikallisLiikenne/compare/v1.0...v1.1
