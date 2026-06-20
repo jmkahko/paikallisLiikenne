@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getStopsByBbox } from '../api/digitransit.js'
+import { OSM_TILE_URL, OSM_TILE_ATTRIBUTION, ICONS, modeClass } from './mapShared.js'
 
 // Tampereen keskusta (Keskustori). Kartta avautuu tähän.
 const TAMPERE_CENTER = [61.4978, 23.761]
@@ -11,23 +11,6 @@ const DEFAULT_ZOOM = 14
 // tuloksia + OSM-laattojen reilu käyttö). Käyttäjälle näytetään vihje.
 const MIN_FETCH_ZOOM = 13
 const FETCH_DEBOUNCE_MS = 400
-
-function modeClass(mode) {
-  return (mode || 'BUS').toLowerCase() === 'tram' ? 'tram' : 'bus'
-}
-
-// Markkeri-ikonit luodaan kerran (ei kuvatiedostoja → vältetään Leaflet/Vite-
-// ikonibugin assetpolut). Väritys hoidetaan CSS:llä mode-luokan kautta.
-function makeIcon(cls) {
-  return L.divIcon({
-    className: 'stop-marker-wrap',
-    html: `<span class="stop-marker stop-marker--${cls}"></span>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -8]
-  })
-}
-const ICONS = { bus: makeIcon('bus'), tram: makeIcon('tram') }
 
 // Karttatason sisäkomponentti: kuuntelee kartan liikkeitä ja hakee pysäkit
 // näkyvälle alueelle. Pitää oltava MapContainerin sisällä (käyttää karttaa).
@@ -113,10 +96,7 @@ export default function StopMap({ onSelect, selectedStopIds, isFull }) {
         className="stop-map"
         scrollWheelZoom
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> -tekijät'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer attribution={OSM_TILE_ATTRIBUTION} url={OSM_TILE_URL} />
         <StopsLayer
           onSelect={onSelect}
           selectedStopIds={selectedStopIds}

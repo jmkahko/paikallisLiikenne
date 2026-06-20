@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDepartures } from '../hooks/useDepartures.js'
+import TripMap from './TripMap.jsx'
 
 const MODE_LABEL = {
   BUS: 'Bussi',
@@ -31,6 +32,7 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
     departureCount
   )
   const [now, setNow] = useState(() => new Date())
+  const [activeTrip, setActiveTrip] = useState(null)
 
   // Päivitä "min"-laskuri sekunnin välein, jotta luvut juoksevat sujuvasti.
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
   const mode = (data?.stop?.vehicleMode || stop.vehicleMode || 'BUS').toUpperCase()
 
   return (
+    <>
     <article className={`stop-card stop-card--${mode.toLowerCase()}`}>
       <header className="stop-card__header">
         <div className="stop-card__title">
@@ -107,21 +110,47 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
         )}
         {departures.length > 0 && (
           <ul className="departures">
-            {departures.map((d, i) => (
-              <li key={`${d.tripId}-${i}`} className="departure">
-                <span className={`route-badge route-${d.mode.toLowerCase()}`}>
-                  {d.routeShortName || '?'}
-                </span>
-                <span className="departure__headsign">{d.headsign || d.routeLongName}</span>
-                <span className="departure__times">
-                  <span className="departure__rel">{formatRelative(d.time, now)}</span>
-                  <span className="departure__clock">
-                    {formatClock(d.time)}
-                    {d.realtime && <span className="rt-dot" title="Reaaliaikainen" />}
+            {departures.map((d, i) => {
+              const headsign = d.headsign || d.routeLongName
+              const inner = (
+                <>
+                  <span className={`route-badge route-${d.mode.toLowerCase()}`}>
+                    {d.routeShortName || '?'}
                   </span>
-                </span>
-              </li>
-            ))}
+                  <span className="departure__headsign">{headsign}</span>
+                  <span className="departure__times">
+                    <span className="departure__rel">{formatRelative(d.time, now)}</span>
+                    <span className="departure__clock">
+                      {formatClock(d.time)}
+                      {d.realtime && <span className="rt-dot" title="Reaaliaikainen" />}
+                    </span>
+                  </span>
+                </>
+              )
+              return (
+                <li key={`${d.tripId}-${i}`} className="departure-row">
+                  {d.tripId ? (
+                    <button
+                      type="button"
+                      className="departure departure--clickable"
+                      onClick={() =>
+                        setActiveTrip({
+                          tripId: d.tripId,
+                          routeShortName: d.routeShortName,
+                          headsign,
+                          mode: d.mode
+                        })
+                      }
+                      title="Näytä reitti kartalla"
+                    >
+                      {inner}
+                    </button>
+                  ) : (
+                    <div className="departure">{inner}</div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>
@@ -135,5 +164,16 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
         )}
       </footer>
     </article>
+    {activeTrip && (
+      <TripMap
+        tripId={activeTrip.tripId}
+        stopId={stop.gtfsId}
+        routeShortName={activeTrip.routeShortName}
+        headsign={activeTrip.headsign}
+        mode={activeTrip.mode}
+        onClose={() => setActiveTrip(null)}
+      />
+    )}
+    </>
   )
 }

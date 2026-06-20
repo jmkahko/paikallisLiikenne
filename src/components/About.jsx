@@ -48,6 +48,13 @@ export default function About({ isOpen, onClose }) {
               kehittäjät eivät ole vastuussa tietojen oikeellisuudesta,
               ajantasaisuudesta tai käytöstä johtuneista vahingoista.
             </p>
+            <p>
+              Kartalla näkyvä bussin tai raitiovaunun sijainti on{' '}
+              <strong>pelkkä arvio aikataulun perusteella</strong> (miltä
+              pysäkiltä vuoro on viimeksi lähtenyt ja milloin). Se{' '}
+              <strong>ei perustu ajoneuvon GPS-sijaintiin</strong>, eikä sitä
+              tule käyttää luotettavana tietona vaunun todellisesta sijainnista.
+            </p>
           </section>
 
           <section className="modal__section">

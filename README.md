@@ -18,6 +18,13 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 - Seuraavat lähdöt per pysäkki: linja, määränpää, lähtöaika ja "min"-laskuri.
   Näytettävien lähtöjen määrän (1–5) voi valita itse — kätevää kapealla
   puhelimen näytöllä. Valinta tallennetaan selaimeen.
+- **Vuoron reitti kartalla** — klikkaamalla aikatauluriviä avautuu kartta,
+  jossa näkyy linjan reittiviiva, pysäkit, lähtö/määränpää ja ajosuunta. Oma
+  pysäkki on korostettu. Matkalla olevasta vuorosta näytetään myös **arvioitu
+  sijainti**. Huomaa: sijainti on **pelkkä arvio aikataulun perusteella** (miltä
+  pysäkiltä vuoro on viimeksi lähtenyt ja milloin) — se **ei perustu ajoneuvon
+  GPS-sijaintiin**, eikä sitä tule käyttää luotettavana tietona vaunun
+  todellisesta sijainnista.
 - Reaaliaikamerkki (vihreä piste) kun aikataulutieto on liikenteen GPS:stä.
 - Automaattinen päivitys 30 sekunnin välein. Manuaalinen päivitys napilla.
 - Polling pysähtyy, kun välilehti ei ole näkyvissä (Page Visibility API),

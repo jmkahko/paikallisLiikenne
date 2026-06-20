@@ -12,6 +12,15 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 ## [Ei julkaistu]
 
 ### Lisätty
+- Vuoron reitti kartalla: aikatauluriviä klikkaamalla avautuu kartta, jossa
+  näkyy kyseisen linjan reittiviiva, pysäkit, lähtö- ja määränpääpysäkki sekä
+  ajosuunta (suuntanuolet). Oma pysäkki on korostettu. Jos vuoro on jo matkalla,
+  näytetään sen **arvioitu sijainti** (vaunumerkki nykyisen pysäkkivälin
+  kohdalla, ohitetut pysäkit himmennettyinä ja kuljettu/jäljellä oleva osuus eri
+  tyyleillä). Sijainti on **pelkkä arvio aikataulun perusteella** (miltä
+  pysäkiltä vuoro on viimeksi lähtenyt ja milloin) — se **ei perustu ajoneuvon
+  GPS-sijaintiin**, eikä sitä tule käyttää luotettavana tietona vaunun
+  todellisesta sijainnista. ([#9])
 - Pysäkkien valinta kartalta: pysäkin lisäyksessä on nyt kaksi välilehteä,
   "Haku" ja "Kartta". Karttavälilehdellä (OpenStreetMap-laatat) näkyvälle
   alueelle ladataan pysäkit ja yksittäisen voi lisätä klikkaamalla markkeria.
@@ -90,6 +99,7 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#1]: https://github.com/jmkahko/paikallisLiikenne/issues/1
 [#4]: https://github.com/jmkahko/paikallisLiikenne/issues/4
 [#5]: https://github.com/jmkahko/paikallisLiikenne/issues/5
+[#9]: https://github.com/jmkahko/paikallisLiikenne/issues/9
 [#7]: https://github.com/jmkahko/paikallisLiikenne/issues/7
 [#8]: https://github.com/jmkahko/paikallisLiikenne/issues/8
 [#3]: https://github.com/jmkahko/paikallisLiikenne/issues/3

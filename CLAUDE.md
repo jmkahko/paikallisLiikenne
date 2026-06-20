@@ -79,6 +79,9 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     └── components/
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
         ├── StopMap.jsx        # Pysäkkien valinta kartalta (Leaflet + OSM-laatat)
+        ├── TripMap.jsx        # Vuoron reittiviiva + pysäkit + arvioitu sijainti (aikataulurivi → modaali)
+        ├── tripProgress.js    # Vuoron arvioitu eteneminen pysäkkien aikatauluajoista (ei GPS)
+        ├── mapShared.js       # Jaetut karttatyökalut (OSM-laatat, divIcon-ikonit)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
         ├── Alerts.jsx         # Häiriötiedotteet: avattava paneeli + "kaikki"-modaali
         ├── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
