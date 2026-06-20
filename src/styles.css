@@ -7,6 +7,7 @@
   --text: #eef2ff;
   --text-dim: #9aaad0;
   --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.2);
   --bus: #2e86de;
   --tram: #e74c3c;
   --rail: #8e44ad;
@@ -27,6 +28,7 @@
     --border: #d8dff0;
     --text: #0e1726;
     --text-dim: #5b6685;
+    --accent-soft: rgba(59, 130, 246, 0.12);
     --warn-bg: #fff5d9;
     --warn-border: #c98b13;
     --warn-text: #5a3d05;
@@ -143,6 +145,39 @@ a {
 .controls__departures select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.controls__tabs {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-soft);
+}
+
+.controls__tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.controls__tab + .controls__tab {
+  border-left: 1px solid var(--border);
+}
+
+.controls__tab--active {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* ---- Alerts (häiriötiedotteet) ---- */
@@ -898,6 +933,82 @@ a {
   color: var(--accent);
 }
 
+/* ---- Pysäkkien valinta kartalta (StopMap, inline välilehti) ---- */
+.stop-map-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.stop-map {
+  height: 55vh;
+  width: 100%;
+}
+
+.stop-map__hint {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: var(--card-2);
+  text-align: center;
+}
+
+/* divIcon-markkeri: värillinen ympyrä moodin mukaan (--bus / --tram). */
+.stop-marker {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.stop-marker--bus {
+  background: var(--bus);
+}
+
+.stop-marker--tram {
+  background: var(--tram);
+}
+
+.stop-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 140px;
+}
+
+.stop-popup__name {
+  font-size: 1rem;
+}
+
+.stop-popup__code {
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.stop-popup__add {
+  margin-top: 0.2rem;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stop-popup__add:disabled {
+  background: var(--border);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
   .app {
     padding: 1.25rem 0.75rem 3rem;
@@ -941,5 +1052,8 @@ a {
   }
   .modal__footer {
     padding: 1rem 1.25rem;
+  }
+  .stop-map {
+    height: 60vh;
   }
 }

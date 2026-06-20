@@ -10,6 +10,10 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 ## Ominaisuudet
 
 - Pysäkkihaku nimellä tai pysäkkikoodilla.
+- **Pysäkkien valinta kartalta** — pysäkin lisäyksessä on "Haku"- ja
+  "Kartta"-välilehdet. Karttavälilehdellä (OpenStreetMap) näkyvälle alueelle
+  latautuvat pysäkit, ja pysäkin lisää klikkaamalla sen markkeria. Bussi- ja
+  raitiovaunupysäkit erottuvat väreillä.
 - Jopa 6 pysäkkiä rinnakkain. Pysäkit tallennetaan selaimeen.
 - Seuraavat lähdöt per pysäkki: linja, määränpää, lähtöaika ja "min"-laskuri.
   Näytettävien lähtöjen määrän (1–5) voi valita itse — kätevää kapealla
@@ -220,18 +224,26 @@ uudelleen.
 
 ## Pysäkkien lisääminen
 
-1. Hae pysäkki nimellä (esim. `Keskustori`, `Hervanta`) tai pysäkkikoodilla
-   (esim. `0501`).
-2. Klikkaa hakutulosta — pysäkki ilmestyy alas omaan korttiin.
-3. Korttien painikkeilla voit järjestää (↑/↓), päivittää (↻) tai poistaa (✕).
-4. Kun olet lisännyt 6 pysäkkiä, hakukenttä lukkiutuu kunnes poistat jonkin.
+1. **Haku-välilehdellä** hae pysäkki nimellä (esim. `Keskustori`, `Hervanta`)
+   tai pysäkkikoodilla (esim. `0501`) ja klikkaa hakutulosta.
+2. **Kartta-välilehdellä** selaa karttaa: zoomaa lähemmäs, niin näkyvälle
+   alueelle ilmestyvät pysäkit, ja lisää pysäkki klikkaamalla markkeria →
+   "Lisää pysäkki".
+3. Lisätty pysäkki ilmestyy alas omaan korttiin.
+4. Korttien painikkeilla voit järjestää (↑/↓), päivittää (↻) tai poistaa (✕).
+5. Kun olet lisännyt 6 pysäkkiä, lisäys lukkiutuu kunnes poistat jonkin.
 
 Pysäkkivalintasi tallennetaan automaattisesti selaimeen — ne säilyvät
 sivulatausten yli.
 
 ## Tekninen yhteenveto
 
-- **React 18** + **Vite** (ei TypeScriptiä, ei lisäkirjastoja UI:lle).
+- **React 18** + **Vite** (ei TypeScriptiä). Ainoa UI-kirjasto on
+  **Leaflet** (`react-leaflet`) karttanäkymään.
+- **Kartta**: karttalaatat haetaan **OpenStreetMapista** (julkiset, ei
+  API-avainta; attribuutio "© OpenStreetMap -tekijät"). Kartalla näkyvät
+  pysäkit haetaan `stopsByBbox`-kyselyllä saman PHP-proxyn kautta — Digitransitin
+  omia karttalaattoja ei käytetä, jotta API-avain ei vuoda selaimeen.
 - Selain kutsuu vain saman domainin `/api/digitransit.php`-proxya. PHP
   lisää `digitransit-subscription-key`-headerin ja välittää GraphQL-kutsun
   `DIGITRANSIT_ENDPOINT`-osoitteeseen.
@@ -266,3 +278,7 @@ sisältö on niin ikään Clauden tuottamaa.
 **Aineisto:** © Digitransit 2026, lisenssi [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Lue [Digitransit Terms of Use](https://digitransit.fi/en/developers/) saadaksesi lisätietoja API:n käytöstä ja tietojen lisensoinnista.
+
+**Kartta:** karttalaatat © [OpenStreetMap](https://www.openstreetmap.org/copyright)
+-tekijät, lisenssi [ODbL](https://opendatacommons.org/licenses/odbl/).
+Karttakirjastona [Leaflet](https://leafletjs.com/).

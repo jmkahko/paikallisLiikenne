@@ -85,10 +85,11 @@ export default function About({ isOpen, onClose }) {
           <section className="modal__section">
             <h3>Lisenssit ja tiedot</h3>
             <p>
-              Sovellus © kahkonen.dev, avoimen lähdekoodin projekti.
+              <strong>Sovellus:</strong> © kahkonen.dev, avoimen lähdekoodin
+              projekti.
             </p>
             <p>
-              Tiedot: © <a
+              <strong>Tiedot:</strong> © <a
                 href="https://digitransit.fi/"
                 target="_blank"
                 rel="noreferrer"
@@ -115,6 +116,35 @@ export default function About({ isOpen, onClose }) {
                 className="modal__link-inline"
               >
                 Digitransit Terms of Use
+              </a>
+              .
+            </p>
+            <p>
+              <strong>Kartta:</strong> © <a
+                href="https://www.openstreetmap.org/copyright"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                OpenStreetMap
+              </a>{' '}
+              -tekijät, lisenssi{' '}
+              <a
+                href="https://opendatacommons.org/licenses/odbl/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                ODbL
+              </a>
+              . Karttakirjasto{' '}
+              <a
+                href="https://leafletjs.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                Leaflet
               </a>
               .
             </p>

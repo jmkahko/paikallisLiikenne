@@ -70,6 +70,32 @@ const STOP_BY_ID_QUERY = /* GraphQL */ `
 const TAMPERE_FEED = 'tampere'
 const MAX_SEARCH_RESULTS = 15
 
+// Pysäkit kartan näkyvälle alueelle (bounding box). feeds-argumentti rajaa
+// Tampereeseen jo palvelimella. Kentät vastaavat searchStops-tuloksen muotoa.
+const STOPS_BY_BBOX_QUERY = /* GraphQL */ `
+  query StopsByBbox(
+    $minLat: Float!
+    $minLon: Float!
+    $maxLat: Float!
+    $maxLon: Float!
+  ) {
+    stopsByBbox(
+      minLat: $minLat
+      minLon: $minLon
+      maxLat: $maxLat
+      maxLon: $maxLon
+      feeds: ["${TAMPERE_FEED}"]
+    ) {
+      gtfsId
+      name
+      code
+      vehicleMode
+      lat
+      lon
+    }
+  }
+`
+
 function isTampereStop(stop) {
   return !!stop && stop.gtfsId.startsWith(`${TAMPERE_FEED}:`)
 }
@@ -172,6 +198,25 @@ export async function searchStops(term) {
   // kaupunkien pysäkit eivät syö 15 tuloksen kiintiötä.
   const data = await gqlFetch(STOP_SEARCH_QUERY, { name: trimmed })
   return (data.stops || []).filter(isTampereStop).slice(0, MAX_SEARCH_RESULTS)
+}
+
+/**
+ * Hae pysäkit kartan näkyvälle alueelle (bounding box). Käytetään
+ * kartalta-valinnassa (StopMap). Rajaus Tampereeseen tehdään palvelinpuolella
+ * feeds-argumentilla, joten erillistä suodatusta ei tarvita.
+ * @param {{minLat:number, minLon:number, maxLat:number, maxLon:number}} bbox
+ * @returns {Promise<Array>} pysäkit (gtfsId, name, code, vehicleMode, lat, lon)
+ */
+export async function getStopsByBbox({ minLat, minLon, maxLat, maxLon }) {
+  const data = await gqlFetch(STOPS_BY_BBOX_QUERY, {
+    minLat,
+    minLon,
+    maxLat,
+    maxLon
+  })
+  return (data?.stopsByBbox || []).filter(
+    (s) => s && typeof s.lat === 'number' && typeof s.lon === 'number'
+  )
 }
 
 /**
