@@ -26,9 +26,11 @@ export default function About({ isOpen, onClose }) {
             <p>
               Tämä sovellus tallentaa valitsemasi pysäkit selaimen paikalliseen
               tallennustilaan (<code>localStorage</code>), jotta ne säilyvät
-              sivulatausten välillä. Tietoja ei lähetetä ulkopuolisille
-              palvelimille eikä evästeitä käytetä. Pysäkkitiedot haetaan
-              Digitransit-rajapinnasta oman palvelimen kautta.
+              sivulatausten välillä. Evästeitä tai analytiikkaa ei käytetä.
+              Pysäkkitiedot haetaan Digitransit-rajapinnasta oman palvelimen
+              kautta. Kartan karttakuvat ladataan suoraan OpenStreetMapin
+              palvelimelta, joka näkee tällöin IP-osoitteesi ja katsotun
+              kartta-alueen.
             </p>
           </section>
 

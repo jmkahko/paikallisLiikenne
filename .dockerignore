@@ -3,13 +3,14 @@ node_modules
 dist
 dist-ssr
 
-# Salaisuudet: avain välitetään build-args-kautta, ei imageen.
+# Salaisuudet: avain välitetään containerille runtime-env-muuttujana, ei imageen.
 .env
 .env.local
 .env.*.local
 
 # Palvelimen oma config.php ei kuulu imageen — avain syötetään env-muuttujana
 public/api/config.php
+/config.php
 
 # Versionhallinta ja editori
 .git

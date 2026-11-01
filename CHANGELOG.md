@@ -11,6 +11,20 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 
 ## [Ei julkaistu]
 
+### Muutettu
+- PHP-proxy etsii `config.php`:n nyt automaattisesti ensin web-rootin
+  yläpuolelta (`/home/käyttäjä/config.php`) ja sitten omasta kansiostaan
+  (`public_html/api/config.php`). Aiemmin dokumentaatio ohjeisti sijoittamaan
+  tiedoston web-rootin yläpuolelle, mutta proxy luki sen vain `api/`-kansiosta,
+  ja `digitransit.php`:tä piti muokata käsin. ([#25])
+- Tietosuojailmoitus ja Tietoja-ikkuna kertovat nyt, että kartan karttakuvat
+  ladataan suoraan OpenStreetMapin palvelimelta. ([#25])
+- Dokumentaatio (README, CLAUDE.md, `.env.example`, `config.example.php`)
+  päivitetty vastaamaan koodia: `npm run preview` toimii Vite-proxyn kautta
+  (ei PHP:tä), origin-tarkistuksen rajoitukset kuvattu rehellisesti,
+  julkaisun tarkistuslista ja `.htaccess`-ohje korjattu, lisätty
+  vianetsintäosio ja sisällysluettelo, Node.js 20+. ([#25])
+
 ## [1.4.0] - 2026-06-20
 
 ### Lisätty
@@ -109,3 +123,4 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6
 [#16]: https://github.com/jmkahko/paikallisLiikenne/issues/16
 [#19]: https://github.com/jmkahko/paikallisLiikenne/issues/19
+[#25]: https://github.com/jmkahko/paikallisLiikenne/issues/25

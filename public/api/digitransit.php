@@ -8,10 +8,11 @@ declare(strict_types=1);           // Pakotetaan tiukat tyypit (int on int, stri
  * GraphQL-rungolla kuin Digitransit. Tämä skripti lisää
  * `digitransit-subscription-key`-headerin ja välittää pyynnön eteenpäin.
  *
- * Avain luetaan kahdesta paikasta (tässä järjestyksessä):
- *   1) Ympäristömuuttuja DIGITRANSIT_API_KEY (esim. Docker-runtimessa)
- *   2) Sama tiedosto kuin tämä, samassa kansiossa: `config.php`
- *      (perinteinen web-hotelli — luodaan käsin palvelimelle).
+ * Asetukset (avain, endpoint, origin) luetaan tässä järjestyksessä:
+ *   1) Ympäristömuuttujat (esim. Docker-runtimessa)
+ *   2) `config.php` (perinteinen web-hotelli — luodaan käsin palvelimelle),
+ *      ensin web-rootin yläpuolelta (`public_html/../config.php`, suositeltu)
+ *      ja sitten tämän tiedoston kansiosta (`public_html/api/config.php`).
  */
 
 // Kerrotaan selaimelle, että vastaus on aina JSON-muotoista (UTF-8-merkistöllä)
@@ -31,13 +32,21 @@ if ($method !== 'POST' && $method !== 'OPTIONS') {
 
 // --- VAIHE 1b: Lataa asetukset (env-muuttujat + config.php fallback) --------
 
-// Ladataan config.php kerran — käytetään fallbackina kaikille asetuksille
-$configFile = __DIR__ . '/config.php';     // __DIR__ = tämän tiedoston kansio (eli public/api/)
+// Ladataan config.php kerran — käytetään fallbackina kaikille asetuksille.
+// Etsitään kahdesta paikasta, ensimmäinen kelvollinen voittaa:
+$configCandidates = [
+    dirname(__DIR__, 2) . '/config.php',   // Web-rootin yläpuoli (suositeltu): public_html/api → /home/käyttäjä/
+    __DIR__ . '/config.php',               // __DIR__ = tämän tiedoston kansio (eli public_html/api/)
+];
 $fileConfig = [];                          // Tyhjä taulukko oletuksena
-if (is_file($configFile)) {               // Tarkistetaan onko tiedosto olemassa
-    $loaded = require $configFile;         // Ladataan tiedosto — sen pitää palauttaa (return) array
-    if (is_array($loaded)) {
-        $fileConfig = $loaded;
+foreach ($configCandidates as $configFile) {
+    // @ vaimentaa open_basedir-varoituksen, jos hosting ei salli web-rootin yläpuolta
+    if (@is_file($configFile)) {           // Tarkistetaan onko tiedosto olemassa
+        $loaded = require $configFile;     // Ladataan tiedosto — sen pitää palauttaa (return) array
+        if (is_array($loaded)) {
+            $fileConfig = $loaded;
+            break;                         // Käytetään ensimmäistä kelvollista (array palauttavaa)
+        }
     }
 }
 
@@ -79,7 +88,7 @@ if ($apiKey === '') {
     echo json_encode([
         'errors' => [[
             'message' => 'Palvelimelta puuttuu DIGITRANSIT_API_KEY '
-                . '(aseta env-muuttuja tai luo api/config.php).'
+                . '(aseta env-muuttuja tai luo config.php).'
         ]]
     ]);
     exit;                                 // Lopetetaan — ilman avainta ei voi tehdä mitään
@@ -91,7 +100,7 @@ if ($endpoint === '') {
     echo json_encode([
         'errors' => [[
             'message' => 'Palvelimelta puuttuu DIGITRANSIT_ENDPOINT '
-                . '(aseta env-muuttuja tai luo api/config.php).'
+                . '(aseta env-muuttuja tai luo config.php).'
         ]]
     ]);
     exit;
