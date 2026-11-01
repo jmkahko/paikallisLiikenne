@@ -1,4 +1,4 @@
-import { APP_VERSION, APP_RELEASE_DATE, CHANGELOG_URL } from '../changelog'
+import { APP_VERSION, APP_RELEASE_DATE, CHANGELOG_URL, REPO_URL } from '../changelog'
 
 export default function About({ isOpen, onClose }) {
   if (!isOpen) return null
@@ -24,11 +24,47 @@ export default function About({ isOpen, onClose }) {
           <section className="modal__section">
             <h3>Tietosuoja</h3>
             <p>
-              Tämä sovellus tallentaa valitsemasi pysäkit selaimen paikalliseen
-              tallennustilaan (<code>localStorage</code>), jotta ne säilyvät
-              sivulatausten välillä. Tietoja ei lähetetä ulkopuolisille
-              palvelimille eikä evästeitä käytetä. Pysäkkitiedot haetaan
-              Digitransit-rajapinnasta oman palvelimen kautta.
+              Tämä sovellus tallentaa valitsemasi pysäkit, näytettävien
+              lähtöjen määrän ja tietosuojailmoituksen kuittauksen selaimen
+              paikalliseen tallennustilaan (<code>localStorage</code>).
+              Valintoja ei tallenneta palvelimelle. Evästeitä tai analytiikkaa
+              ei käytetä.
+            </p>
+            <p>
+              Pysäkki- ja aikataulutiedot haetaan Digitransit-rajapinnasta
+              tämän sivuston oman palvelimen kautta, joten Digitransit ei näe
+              IP-osoitettasi. Sivustoa palveleva web-palvelin tallentaa
+              tavanomaiset palvelinlokit (mm. IP-osoite, ajankohta ja pyydetty
+              osoite).
+            </p>
+            <p>
+              Kun avaat kartan (Kartta-välilehti tai vuoron reitti),
+              karttakuvat ladataan suoraan OpenStreetMap Foundationin
+              palvelimelta. Se näkee tällöin IP-osoitteesi, selaimesi ja
+              käyttöjärjestelmäsi tiedot, sivuston osoitteen sekä katsotun
+              kartta-alueen. Ilman kartan avaamista OpenStreetMapiin ei oteta
+              yhteyttä. Katso{' '}
+              <a
+                href="https://osmfoundation.org/wiki/Privacy_Policy"
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                OpenStreetMap Foundationin tietosuojakäytäntö
+              </a>
+              .
+            </p>
+            <p>
+              Ylläpitäjä: kahkonen.dev. Yhteydenotot{' '}
+              <a
+                href={`${REPO_URL}/issues`}
+                target="_blank"
+                rel="noreferrer"
+                className="modal__link-inline"
+              >
+                GitHubin Issues-sivun
+              </a>{' '}
+              kautta.
             </p>
           </section>
 

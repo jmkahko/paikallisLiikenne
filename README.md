@@ -7,6 +7,18 @@ seuraavia bussi- ja raitiovaunulähtöjä reaaliaikaisesti. Voit lisätä jopa
 Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 (Waltti / Tampere) **PHP-proxyn kautta**, joka pitää API-avaimen palvelimella.
 
+**Sisällys:**
+[Ominaisuudet](#ominaisuudet) ·
+[Pysäkkien lisääminen](#pysäkkien-lisääminen) ·
+[Tietosuoja ja tietoturva](#tietosuoja-ja-tietoturva) ·
+[API-avaimen hankinta](#api-avaimen-hankinta) ·
+[Asennus ja kehitys](#asennus-ja-kehitys) ·
+[Web-hotelli-simulaatio (Docker)](#web-hotelli-simulaatio-docker) ·
+[Julkaisu web-hotellille](#julkaisu-web-hotellille) ·
+[Vianetsintä](#vianetsintä) ·
+[Tekninen yhteenveto](#tekninen-yhteenveto) ·
+[Lisenssi & lähteet](#lisenssi--lähteet)
+
 ## Ominaisuudet
 
 - Pysäkkihaku nimellä tai pysäkkikoodilla.
@@ -31,26 +43,67 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   ja päivittyy heti kun välilehti palaa eteen — säästää API-kiintiötä.
 - Bussit (sininen) ja raitiovaunut (punainen) erottuvat värillä.
 - Vaalea/tumma teema seuraa järjestelmäasetusta.
-- **API-avain pysyy palvelimella** — selaimessa ei ole avainta missään
-  vaiheessa. PHP-proxy välittää GraphQL-kutsut Digitransitiin.
-- **CORS-suojaus** — proxy hyväksyy vain omalta sivustolta tulevat pyynnöt
-  (`ALLOWED_ORIGIN`). Estää ulkopuolisen väärinkäytön.
-- **Tietosuojailmoitus** — kertoo käyttäjälle ensimmäisellä kerralla, että
-  sovellus tallentaa pysäkkivalinnat selaimen `localStorage`:en. Ei evästeitä,
-  ei analytiikkaa, ei tietojen lähetystä ulkopuolisille. Ilmoituksen voi
-  sulkea ja valinta muistetaan.
 - **Häiriötiedotteet** — avattava paneeli näyttää valitsemiisi pysäkkeihin
   vaikuttavat häiriöt. Mukaan tulevat myös reittikohtaiset tiedotteet (esim.
   "raitiovaunu 1"), jos kyseinen linja pysähtyy jollakin valitulla pysäkillä,
   sekä koko verkkoa koskevat tiedotteet. Tiedotteessa näkyvät sitä koskevat
   linjat. "Näytä kaikki" -modaalista näkee kaikki Tampereen tiedotteet.
   Päivittyy automaattisesti noin minuutin välein.
-- **About-sivu** — modale, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
+- **Tietosuojailmoitus** — kertoo ensimmäisellä kerralla, mitä sovellus
+  tallentaa ja mihin se ottaa yhteyttä (ks.
+  [Tietosuoja ja tietoturva](#tietosuoja-ja-tietoturva)). Ilmoituksen voi
+  sulkea ja valinta muistetaan.
+- **About-sivu** — modaali, jossa tiedot sovelluksesta, lisenssistä, Digitransitista
   ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
 - **Versiotieto** — About-ikkunassa näkyy käytössä oleva versio ja julkaisupäivä
   sekä linkki täyteen versiohistoriaan: [`CHANGELOG.md`](CHANGELOG.md).
 
-## 1. API-avaimen hankinta
+## Pysäkkien lisääminen
+
+1. **Haku-välilehdellä** hae pysäkki nimellä (esim. `Keskustori`, `Hervanta`)
+   tai pysäkkikoodilla (esim. `0501`) ja klikkaa hakutulosta. Hakuun
+   tarvitaan vähintään 2 merkkiä.
+2. **Kartta-välilehdellä** selaa karttaa: zoomaa lähemmäs, niin näkyvälle
+   alueelle ilmestyvät pysäkit, ja lisää pysäkki klikkaamalla markkeria →
+   "Lisää pysäkki".
+3. Lisätty pysäkki ilmestyy alas omaan korttiin.
+4. Korttien painikkeilla voit järjestää (↑/↓), päivittää (↻) tai poistaa (✕).
+5. Kun olet lisännyt 6 pysäkkiä, lisäys lukkiutuu kunnes poistat jonkin.
+
+Pysäkkivalintasi tallennetaan automaattisesti selaimeen — ne säilyvät
+sivulatausten yli.
+
+## Tietosuoja ja tietoturva
+
+- **Selaimeen tallennetaan** vain pysäkkivalinnat, näytettävien lähtöjen
+  määrä ja tieto tietosuojailmoituksen kuittaamisesta (`localStorage`).
+  Valintoja ei tallenneta palvelimelle. Evästeitä tai analytiikkaa ei käytetä.
+- **Pysäkki- ja aikataulutiedot** haetaan oman palvelimen PHP-proxyn kautta;
+  selain ei ota yhteyttä Digitransitiin suoraan, joten Digitransit ei näe
+  käyttäjän IP-osoitetta. Web-palvelin tallentaa tavanomaiset palvelinlokit
+  (mm. IP-osoite, ajankohta ja pyydetty osoite).
+- **Karttakuvat** (laatat) ladataan suoraan OpenStreetMap Foundationin
+  palvelimelta, kun käyttäjä avaa kartan (Kartta-välilehti tai vuoron reitti).
+  Jokaisesta laattapyynnöstä OpenStreetMap näkee käyttäjän IP-osoitteen,
+  ajankohdan, selaimen ja käyttöjärjestelmän (User-Agent), sivuston osoitteen
+  (Referer) sekä katsotun kartta-alueen ja zoomaustason. Etusivun avaaminen
+  ei vielä ota yhteyttä OpenStreetMapiin, joten erillistä suostumusta ei
+  kysytä — asiasta kerrotaan tietosuojailmoituksessa ja Tietoja-ikkunassa.
+  Ks. [OpenStreetMap Foundationin tietosuojakäytäntö](https://osmfoundation.org/wiki/Privacy_Policy).
+- **Ylläpitäjä ja yhteydenotot**: kahkonen.dev,
+  [GitHubin Issues](https://github.com/jmkahko/paikallisLiikenne/issues).
+  Jos julkaiset sovelluksen omalla sivustollasi, päivitä nämä tiedot
+  `src/components/About.jsx`:ään.
+- **API-avain pysyy palvelimella** — selaimessa ei ole avainta missään
+  vaiheessa. PHP-proxy lisää avaimen ja välittää GraphQL-kutsut Digitransitiin.
+- **Origin-tarkistus** — proxy hyväksyy vain pyynnöt, joiden `Origin`-header
+  vastaa `ALLOWED_ORIGIN`-asetusta. Tämä estää muita sivustoja käyttämästä
+  proxyasi selaimesta (ja kuluttamasta API-kiintiötäsi). Huomaa, ettei
+  tarkistus ole pääsynhallinta: selaimen ulkopuolelta (esim. cURL) `Origin`-
+  headerin voi asettaa mielivaltaisesti. Jos `ALLOWED_ORIGIN` on tyhjä,
+  tarkistus on pois päältä — aseta se aina tuotannossa.
+
+## API-avaimen hankinta
 
 Digitransit vaatii ilmaisen subscription keyn.
 
@@ -59,9 +112,9 @@ Digitransit vaatii ilmaisen subscription keyn.
 3. Tilaa **Routing API** -tuote (riittää ilmainen taso).
 4. Kopioi avaimesi. Avain näyttää 32 merkin heksamerkkijonolta.
 
-## 2. Asennus ja kehitys
+## Asennus ja kehitys
 
-Tarvitset [Node.js 18+](https://nodejs.org/).
+Tarvitset [Node.js 20+](https://nodejs.org/).
 
 ```bash
 # 1. Asenna riippuvuudet
@@ -69,10 +122,10 @@ npm install
 
 # 2. Luo .env-tiedosto asetuksilla
 cp .env.example .env
-# avaa .env ja täytä kaikki kolme (pakollisia):
+# avaa .env ja täytä arvot:
 #   DIGITRANSIT_API_KEY=oma-avaimesi
 #   DIGITRANSIT_ENDPOINT=https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/
-#   ALLOWED_ORIGIN=http://localhost:5173
+#   ALLOWED_ORIGIN=http://localhost:8080
 # (HUOM: muuttujissa EI ole VITE_-prefixiä — arvot eivät mene selainbundleen.)
 
 # 3. Käynnistä kehityspalvelin
@@ -83,21 +136,31 @@ Sovellus avautuu osoitteessa <http://localhost:5173>. Vite-dev-palvelin
 proxyttää `/api/digitransit.php` -kutsut suoraan Digitransitiin ja lisää
 avaimen palvelinpuolella, joten avain pysyy palvelimella myös devissä.
 
-### Tuotantokäännös
+Dev-tilassa PHP:tä ei ajeta, joten `ALLOWED_ORIGIN`-tarkistustakaan ei tehdä —
+arvoa käytetään vasta Dockerissa ja web-hotellissa. `DIGITRANSIT_ENDPOINT` on
+devissä pakollinen: ilman sitä Vite ei luo proxya.
+
+### Tuotantokäännös ja esikatselu
 
 ```bash
 npm run build      # luo dist/-kansion (sis. dist/api/digitransit.php)
-npm run preview    # esikatselu
+npm run preview    # esikatselu osoitteessa http://localhost:4173
 ```
 
-## 3. Web-hotelli-simulaatio (Docker)
+`npm run preview` käyttää samaa Vite-proxya kuin `npm run dev`, joten `/api`
+toimii, mutta **PHP-proxya ei ajeta**. Kun haluat testata PHP-proxyn
+(esim. `digitransit.php`:n muutokset tai origin-tarkistuksen), käytä
+[Dockeria](#web-hotelli-simulaatio-docker).
+
+## Web-hotelli-simulaatio (Docker)
 
 Ennen julkaisua oikealle web-hotellille voit testata sovelluksen
 Docker-containerissa, joka jäljittelee tyypillistä shared-hosting-
 ympäristöä: **Apache 2.4 + PHP 8** ja staattisten tiedostojen serveri.
 
-**Vaatimukset:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-(sis. docker compose).
+**Vaatimukset:** Docker ja Docker Compose v2
+([Docker Desktop](https://www.docker.com/products/docker-desktop/), tai
+Linuxilla Docker Engine + `docker-compose-plugin`).
 
 ```bash
 # 1. Varmista että .env on luotu ja kaikki kolme muuttujaa täytetty
@@ -122,7 +185,7 @@ Container tekee sisäisesti:
 Avain ei näy selaimessa, ei build-imagen kerroksissa, vaan ainoastaan
 runtime-ympäristössä. Sammutus: `Ctrl+C` tai `docker compose down`.
 
-## 4. Julkaisu web-hotellille
+## Julkaisu web-hotellille
 
 Sovelluksen kääntäminen tuottaa `dist/`-kansion, jonka sisältö ladataan
 hostin `public_html`-juureen (cPanel, FTP/SFTP tai vastaava).
@@ -135,16 +198,17 @@ saatavilla selaimesta.
 
 ```
 /home/käyttäjä/
-├── config.php              ← API-avain turvassa! (yläpuolella)
-├── public_html/            ← web-root (näkyy webbissä)
-│   ├── index.html
-│   ├── api/
-│   │   └── digitransit.php ← PHP-proxy
-│   ├── [muut staattiset tiedostot]
-│   └── .htaccess           ← estää .env:n suoran latauksen
+├── config.php              ← API-avain turvassa (web-rootin yläpuolella)
+└── public_html/            ← web-root (näkyy webbissä)
+    ├── index.html
+    ├── assets/
+    └── api/
+        ├── digitransit.php     ← PHP-proxy
+        ├── config.example.php  ← malli (.htaccess estää latauksen)
+        └── .htaccess           ← estää config.php:n ja mallin latauksen
 ```
 
-### Vaiheet:
+### Vaiheet
 
 1. **Käännä sovellus paikallisesti:**
 
@@ -153,95 +217,75 @@ saatavilla selaimesta.
    ```
 
 2. **Lataa `dist/`-kansion sisältö** hostin `public_html`-juureen.
-   - Varmista että `api/`-alikansio kopioituu mukana (sisältää `digitransit.php`-tiedoston)
+   - Varmista, että `api/`-alikansio kopioituu mukana.
+   - Varmista, että myös piilotiedosto `api/.htaccess` siirtyy — monet
+     FTP-ohjelmat piilottavat pisteellä alkavat tiedostot oletuksena.
 
-3. **Luo `config.php` web-hotellin juureen** (`public_html`:n yläpuolelle):
+3. **Anna asetukset** jommallakummalla tavalla:
 
-   - Avaa hostin tiedostonhallinta (cPanel File Manager, FTP/SFTP, jne.)
-   - Siirry `/home/käyttäjä/`-tasoon (sama kansio missä `public_html` näkyy)
-   - Luo uusi tiedosto `config.php`
-   - Kopioi seuraava sisältö ja täytä arvot:
+   **a) `config.php` (tavallisin web-hotellissa).** Luo tiedosto
+   `/home/käyttäjä/config.php` (samaan kansioon, jossa `public_html` näkyy)
+   esim. cPanelin File Managerilla tai FTP:llä, ja täytä arvot:
 
    ```php
    <?php
-   // config.php - web-hotellin juuressa (public_html:n yläpuolella)
-   
    return [
-       'digitransit_api_key' => 'your-api-key-here',
+       'digitransit_api_key' => 'oma-avaimesi',
        'digitransit_endpoint' => 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/',
        'allowed_origin' => 'https://oma-domain.fi',
    ];
    ```
 
-4. **Päivitä `digitransit.php`:ssä config-tiedoston polku:**
+   Proxy etsii `config.php`:n automaattisesti ensin web-rootin yläpuolelta ja
+   sitten omasta kansiostaan — `digitransit.php`:tä ei tarvitse muokata. Jos
+   hosting ei salli tiedostoja web-rootin yläpuolella, voit sijoittaa
+   tiedoston `public_html/api/config.php`; `api/.htaccess` estää sen
+   lataamisen selaimella. Pohjana voi käyttää `api/config.example.php`:tä.
 
-   Jos `digitransit.php` on `public_html/api/`-kansiossa, muuta polku:
-
-   ```php
-   $configFile = realpath(__DIR__ . '/../../config.php');
-   if (!$configFile || !file_exists($configFile)) {
-       http_response_code(500);
-       die('Config file not found');
-   }
-   ```
-
-   - `__DIR__` = `public_html/api` (tämän tiedoston kansio)
-   - `/../../config.php` = mennään kaksi tasoa ylös ja etsitään `config.php`
-
-5. **Suojaa tiedostot:**
-
-   Lisää `public_html/`-juureen `.htaccess`-tiedosto:
-
-   ```apache
-   <Files ".env">
-       Order allow,deny
-       Deny from all
-   </Files>
-   <FilesMatch "\.example\.php$">
-       Order allow,deny
-       Deny from all
-   </FilesMatch>
-   ```
-
-6. **Aseta ympäristömuuttujat** (jos hosting tukee niitä):
-
-   cPanelin "Environment Variables" tai vastaavasta paneelista lisää:
+   **b) Ympäristömuuttujat** (jos hosting tukee, esim. cPanelin
+   "Environment Variables"):
    - `DIGITRANSIT_API_KEY` = avain
    - `DIGITRANSIT_ENDPOINT` = GraphQL-rajapinnan URL
    - `ALLOWED_ORIGIN` = sivustosi osoite, esim. `https://oma-domain.fi`
 
-   (Jos et käytä ympäristömuuttujia, käytä `config.php`:tä edellä kuvatulla tavalla.)
+   Jos molemmat on annettu, ympäristömuuttuja voittaa `config.php`:n arvon.
 
-7. **Tarkista että suojaus toimii:**
+   `allowed_origin` kirjoitetaan täsmälleen siinä muodossa kuin selain
+   sivuston osoitteen lähettää: protokolla mukaan (`https://`), ilman
+   kauttaviivaa loppuun, ja `www.` vain jos sivusto oikeasti avataan sen
+   kautta.
+
+4. **Tarkista, että suojaus toimii:**
 
    ```
-   https://oma-domain.fi/config.php → 404 (ei näy: on yläpuolella!)
-   https://oma-domain.fi/digitransit.php → 500 tai muuttaa sisällön (ei näy avaimena)
-   https://oma-domain.fi/ → sovellus toimii normaalisti ✓
+   https://oma-domain.fi/                        → sovellus toimii, lähdöt latautuvat
+   https://oma-domain.fi/api/digitransit.php     → 405 "Method Not Allowed" (proxy toimii, avain ei näy)
+   https://oma-domain.fi/api/config.example.php  → 403 (.htaccess toimii)
+   https://oma-domain.fi/api/config.php          → 403 tai 404, ei koskaan tiedoston sisältöä
    ```
-
-8. **Käytä** sovellusta normaalisti osoitteessa `https://oma-domain.fi/`.
 
 ### Avaimen vaihto / rotatointi
 
-Korvaa web-hotellin juuressa olevan `config.php`:n `digitransit_api_key`-arvo
-(tai `DIGITRANSIT_API_KEY`-ympäristömuuttuja) uudella avaimella ja generoi
-vanha tilalle Digitransit-portaalista. Sovellusta ei tarvitse kääntää
-uudelleen.
+1. Hanki Digitransit-portaalista uusi avain. Jos tilauksellasi on kaksi
+   avainta (primary/secondary), voit ottaa käyttöön toisen niistä.
+2. Vaihda uusi avain `config.php`:n `digitransit_api_key`-arvoon (tai
+   `DIGITRANSIT_API_KEY`-ympäristömuuttujaan).
+3. Kun sovellus toimii uudella avaimella, uusi (regeneroi) vanha avain
+   portaalissa, jotta se lakkaa toimimasta.
 
-## Pysäkkien lisääminen
+Sovellusta ei tarvitse kääntää uudelleen.
 
-1. **Haku-välilehdellä** hae pysäkki nimellä (esim. `Keskustori`, `Hervanta`)
-   tai pysäkkikoodilla (esim. `0501`) ja klikkaa hakutulosta.
-2. **Kartta-välilehdellä** selaa karttaa: zoomaa lähemmäs, niin näkyvälle
-   alueelle ilmestyvät pysäkit, ja lisää pysäkki klikkaamalla markkeria →
-   "Lisää pysäkki".
-3. Lisätty pysäkki ilmestyy alas omaan korttiin.
-4. Korttien painikkeilla voit järjestää (↑/↓), päivittää (↻) tai poistaa (✕).
-5. Kun olet lisännyt 6 pysäkkiä, lisäys lukkiutuu kunnes poistat jonkin.
+## Vianetsintä
 
-Pysäkkivalintasi tallennetaan automaattisesti selaimeen — ne säilyvät
-sivulatausten yli.
+Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
+
+| Virhe | Todennäköinen syy |
+| ----- | ----------------- |
+| `HTTP 403: Kielletty: väärä origin.` | `ALLOWED_ORIGIN` ei täsmää sivun osoitteeseen. Vertailu on tarkka: `http`/`https`, `www.`, portti ja loppukauttaviiva vaikuttavat. Dockerissa arvon pitää olla `http://localhost:8080`. |
+| `HTTP 500: Palvelimelta puuttuu DIGITRANSIT_API_KEY` (tai `…_ENDPOINT`) | Ympäristömuuttujaa ei ole asetettu eikä `config.php`:tä löydy kummastakaan paikasta. Dockerissa: tarkista `.env` ja käynnistä container uudelleen (`docker compose up`). |
+| `HTTP 401` | Avain on väärä tai tilaus ei ole voimassa. Tarkista avain Digitransit-portaalista. |
+| Devissä `Unexpected token '<'` / `is not valid JSON` | `.env`:stä puuttuu `DIGITRANSIT_ENDPOINT`, jolloin Vite ei luo proxya ja palauttaa `digitransit.php`:n lähdekoodin JSONin sijaan. Käynnistä `npm run dev` uudelleen `.env`:n muokkauksen jälkeen. |
+| `HTTP 502: Upstream-virhe` | Palvelin ei saa yhteyttä Digitransitiin: väärä `DIGITRANSIT_ENDPOINT`, hostingin palomuuri tai Digitransitin katko. |
 
 ## Tekninen yhteenveto
 
@@ -251,20 +295,22 @@ sivulatausten yli.
   API-avainta; attribuutio "© OpenStreetMap -tekijät"). Kartalla näkyvät
   pysäkit haetaan `stopsByBbox`-kyselyllä saman PHP-proxyn kautta — Digitransitin
   omia karttalaattoja ei käytetä, jotta API-avain ei vuoda selaimeen.
-- Selain kutsuu vain saman domainin `/api/digitransit.php`-proxya. PHP
-  lisää `digitransit-subscription-key`-headerin ja välittää GraphQL-kutsun
-  `DIGITRANSIT_ENDPOINT`-osoitteeseen.
-- CORS-suojaus: `ALLOWED_ORIGIN`-muuttuja rajaa pyynnöt vain omalta
-  sivustolta tuleviin.
+- Selain kutsuu Digitransit-tietoja varten vain saman domainin
+  `/api/digitransit.php`-proxya. PHP lisää `digitransit-subscription-key`-
+  headerin ja välittää GraphQL-kutsun `DIGITRANSIT_ENDPOINT`-osoitteeseen.
+- Origin-tarkistus: `ALLOWED_ORIGIN` rajaa selainpyynnöt omalta sivustolta
+  tuleviin (ks. [Tietosuoja ja tietoturva](#tietosuoja-ja-tietoturva)).
 - Asetukset (avain, endpoint, origin) ovat palvelimella joko
-  ympäristömuuttujissa tai `config.php`:ssa, joka sijoitetaan web-rootin
-  yläpuolelle (`public_html`-kansion yläpuolelle) turvallisuuden vuoksi.
-  `.htaccess` estää muiden sensitiivisten tiedostojen suoran latauksen.
-- Dev-tilassa Vite-server proxyttää `/api/digitransit.php`-kutsut suoraan
-  Digitransitiin ja injektoi avaimen `.env`-tiedostosta.
+  ympäristömuuttujissa tai `config.php`:ssa. Proxy etsii `config.php`:n
+  ensin web-rootin yläpuolelta ja sitten `api/`-kansiosta. `api/.htaccess`
+  estää `config.php`:n ja sen mallin suoran latauksen.
+- Dev-tilassa (`npm run dev` ja `npm run preview`) Vite-server proxyttää
+  `/api/digitransit.php`-kutsut suoraan Digitransitiin ja injektoi avaimen
+  `.env`-tiedostosta.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
-- Päivitys ajastimella `setInterval` (30 s) komponentin sisällä,
-  pysäytetty `visibilitychange`-tapahtumaan kun välilehti on piilossa.
+- Lähdöt päivitetään `setInterval`-ajastimella 30 s välein
+  (`useDepartures`-hook) ja häiriötiedotteet 60 s välein (`useAlerts`).
+  Molemmat pysähtyvät `visibilitychange`-tapahtumaan, kun välilehti on piilossa.
 - **Docker**: `Dockerfile` (multi-stage: node-build → php-apache) ja
   `docker-compose.yml` simuloivat web-hotelli-ympäristöä.
 
@@ -277,6 +323,8 @@ komentoja antamalla: vaatimukset, suunnittelu, toteutus ja jatkokehitys
 lisäys avaimen suojaamiseksi) ohjattiin keskustelemalla Clauden kanssa,
 joka kirjoitti, muokkasi ja tarkasti tiedostot. Tämän README-tiedoston
 sisältö on niin ikään Clauden tuottamaa.
+
+Kehitysideat ja havainnot: [GitHubin Issues](https://github.com/jmkahko/paikallisLiikenne/issues).
 
 ## Lisenssi & lähteet
 

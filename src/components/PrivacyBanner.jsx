@@ -14,9 +14,10 @@ export default function PrivacyBanner() {
         <p className="privacy-banner__text">
           Tämä sovellus tallentaa valitsemasi pysäkit selaimen paikalliseen
           tallennustilaan (<code>localStorage</code>), jotta ne säilyvät
-          sivulatausten välillä. Tietoja ei lähetetä ulkopuolisille palvelimille
-          eikä evästeitä käytetä. Pysäkkitiedot haetaan Digitransit-rajapinnasta
-          oman palvelimen kautta.
+          sivulatausten välillä. Evästeitä tai analytiikkaa ei käytetä.
+          Kun avaat kartan, karttakuvat ladataan OpenStreetMapin palvelimelta,
+          joka näkee tällöin IP-osoitteesi, selaimesi tiedot ja katsotun
+          kartta-alueen. Lisätietoja Tietoja-ikkunassa (ℹ️).
         </p>
         <button
           className="privacy-banner__btn"

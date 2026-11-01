@@ -4,6 +4,7 @@ dist-ssr
 .env
 .env.local
 public/api/config.php
+/config.php
 .env.*.local
 *.local
 .DS_Store
