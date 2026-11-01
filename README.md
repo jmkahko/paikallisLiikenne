@@ -77,12 +77,23 @@ sivulatausten yli.
 
 - **Selaimeen tallennetaan** vain pysäkkivalinnat, näytettävien lähtöjen
   määrä ja tieto tietosuojailmoituksen kuittaamisesta (`localStorage`).
-  Evästeitä tai analytiikkaa ei käytetä.
+  Valintoja ei tallenneta palvelimelle. Evästeitä tai analytiikkaa ei käytetä.
 - **Pysäkki- ja aikataulutiedot** haetaan oman palvelimen PHP-proxyn kautta;
-  selain ei ota yhteyttä Digitransitiin suoraan.
-- **Karttakuvat** (laatat) ladataan suoraan OpenStreetMapin palvelimelta, kun
-  karttaa käytetään. OpenStreetMap näkee tällöin käyttäjän IP-osoitteen ja
-  katsotun kartta-alueen.
+  selain ei ota yhteyttä Digitransitiin suoraan, joten Digitransit ei näe
+  käyttäjän IP-osoitetta. Web-palvelin tallentaa tavanomaiset palvelinlokit
+  (mm. IP-osoite, ajankohta ja pyydetty osoite).
+- **Karttakuvat** (laatat) ladataan suoraan OpenStreetMap Foundationin
+  palvelimelta, kun käyttäjä avaa kartan (Kartta-välilehti tai vuoron reitti).
+  Jokaisesta laattapyynnöstä OpenStreetMap näkee käyttäjän IP-osoitteen,
+  ajankohdan, selaimen ja käyttöjärjestelmän (User-Agent), sivuston osoitteen
+  (Referer) sekä katsotun kartta-alueen ja zoomaustason. Etusivun avaaminen
+  ei vielä ota yhteyttä OpenStreetMapiin, joten erillistä suostumusta ei
+  kysytä — asiasta kerrotaan tietosuojailmoituksessa ja Tietoja-ikkunassa.
+  Ks. [OpenStreetMap Foundationin tietosuojakäytäntö](https://osmfoundation.org/wiki/Privacy_Policy).
+- **Ylläpitäjä ja yhteydenotot**: kahkonen.dev,
+  [GitHubin Issues](https://github.com/jmkahko/paikallisLiikenne/issues).
+  Jos julkaiset sovelluksen omalla sivustollasi, päivitä nämä tiedot
+  `src/components/About.jsx`:ään.
 - **API-avain pysyy palvelimella** — selaimessa ei ole avainta missään
   vaiheessa. PHP-proxy lisää avaimen ja välittää GraphQL-kutsut Digitransitiin.
 - **Origin-tarkistus** — proxy hyväksyy vain pyynnöt, joiden `Origin`-header

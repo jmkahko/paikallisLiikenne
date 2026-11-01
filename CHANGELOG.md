@@ -17,8 +17,12 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
   (`public_html/api/config.php`). Aiemmin dokumentaatio ohjeisti sijoittamaan
   tiedoston web-rootin yläpuolelle, mutta proxy luki sen vain `api/`-kansiosta,
   ja `digitransit.php`:tä piti muokata käsin. ([#25])
-- Tietosuojailmoitus ja Tietoja-ikkuna kertovat nyt, että kartan karttakuvat
-  ladataan suoraan OpenStreetMapin palvelimelta. ([#25])
+- Tietosuojailmoitus ja Tietoja-ikkuna kertovat nyt, että kartan avaaminen
+  lataa karttakuvat suoraan OpenStreetMap Foundationin palvelimelta, joka näkee
+  käyttäjän IP-osoitteen, selaimen tiedot ja katsotun kartta-alueen (linkki
+  OSMF:n tietosuojakäytäntöön). Tietoja-ikkunassa mainitaan myös palvelinlokit,
+  se ettei Digitransit näe käyttäjän IP-osoitetta, sekä ylläpitäjän
+  yhteydenottokanava. ([#25])
 - Dokumentaatio (README, CLAUDE.md, `.env.example`, `config.example.php`)
   päivitetty vastaamaan koodia: `npm run preview` toimii Vite-proxyn kautta
   (ei PHP:tä), origin-tarkistuksen rajoitukset kuvattu rehellisesti,
