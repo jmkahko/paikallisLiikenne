@@ -110,7 +110,9 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
           <Marker position={progress.vehicle} icon={makeVehicleIcon(mode)}>
             <Popup>
               <div className="stop-popup">
-                <strong className="stop-popup__name">Vaunun arvioitu sijainti</strong>
+                <strong className="stop-popup__name">
+                  {cls === 'tram' ? 'Raitiovaunun' : 'Bussin'} arvioitu sijainti
+                </strong>
                 {progress.fromStop && progress.fromStop.departure && (
                   <span className="stop-popup__code">
                     Lähtenyt pysäkiltä {progress.fromStop.name} klo{' '}

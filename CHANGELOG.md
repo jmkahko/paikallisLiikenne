@@ -43,6 +43,14 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
   julkaisun tarkistuslista ja `.htaccess`-ohje korjattu, lisätty
   vianetsintäosio ja sisällysluettelo, Node.js 20+. ([#25])
 
+### Korjattu
+- Vuoron kartalla arvioidun sijainnin merkki näytti aina "Vaunun arvioitu
+  sijainti", myös bussille. Nyt teksti on kulkumuodon mukaan "Bussin arvioitu
+  sijainti" tai "Raitiovaunun arvioitu sijainti". Samalla käyttöliittymä,
+  jaettavan vuorolinkin viesti ja dokumentaatio puhuvat johdonmukaisesti
+  bussista ja raitiovaunusta ("vaunu", "ajoneuvo" ja "ratikka" poistettu).
+  ([#28])
+
 ## [1.4.0] - 2026-06-20
 
 ### Lisätty
@@ -143,3 +151,4 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#19]: https://github.com/jmkahko/paikallisLiikenne/issues/19
 [#24]: https://github.com/jmkahko/paikallisLiikenne/issues/24
 [#25]: https://github.com/jmkahko/paikallisLiikenne/issues/25
+[#28]: https://github.com/jmkahko/paikallisLiikenne/issues/28

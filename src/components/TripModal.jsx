@@ -11,7 +11,8 @@ import { buildTripLink, tripShareText } from './tripLink.js'
  * Yksittäisen vuoron näkymä (issuet #9 ja #24): yhteenveto (lähtö / perillä),
  * Jaa-painike sekä välilehdet "Kartta" ja "Aikataulu". Avataan pysäkkikortin
  * aikataulurivistä tai jaetusta linkistä (App.jsx). Linjan nimi, määränpää ja
- * kulkuneuvo otetaan haetusta vuorosta; propsit näkyvät vain latauksen ajan.
+ * kulkumuoto (bussi / raitiovaunu) otetaan haetusta vuorosta; propsit näkyvät
+ * vain latauksen ajan.
  *
  * @param {{tripId, date, fromId, toId, routeShortName, headsign, mode, onClose}} props
  */
