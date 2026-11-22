@@ -88,8 +88,9 @@ export default function About({ isOpen, onClose }) {
               Kartalla näkyvä bussin tai raitiovaunun sijainti on{' '}
               <strong>pelkkä arvio aikataulun perusteella</strong> (miltä
               pysäkiltä vuoro on viimeksi lähtenyt ja milloin). Se{' '}
-              <strong>ei perustu ajoneuvon GPS-sijaintiin</strong>, eikä sitä
-              tule käyttää luotettavana tietona vaunun todellisesta sijainnista.
+              <strong>ei perustu GPS-paikannukseen</strong>, eikä sitä tule
+              käyttää luotettavana tietona bussin tai raitiovaunun todellisesta
+              sijainnista.
             </p>
           </section>
 

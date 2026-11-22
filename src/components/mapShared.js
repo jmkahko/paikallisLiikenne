@@ -33,7 +33,7 @@ export const ICONS_PASSED = {
   tram: makeStopIcon('tram', ' stop-marker--passed')
 }
 
-// Vaunun arvioitu sijainti reitillä.
+// Bussin tai raitiovaunun arvioitu sijainti reitillä.
 export function makeVehicleIcon(mode) {
   const emoji = (mode || 'BUS').toLowerCase() === 'tram' ? '🚊' : '🚌'
   return L.divIcon({

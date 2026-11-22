@@ -1,6 +1,7 @@
 // Vuoron arvioitu eteneminen pysäkkien aikatauluajoista (ei GPS:ää).
 // Käytetään TripMap-kartassa: mitkä pysäkit on jo ohitettu ja missä reitin
-// välissä vaunu on juuri nyt. Lisäksi vuoronäkymän yhteiset aika-apurit.
+// välissä bussi tai raitiovaunu on juuri nyt. Lisäksi vuoronäkymän yhteiset
+// aika-apurit.
 
 export function formatClock(ms) {
   return new Date(ms).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
@@ -65,7 +66,7 @@ export function computeTripProgress(stops, geometry, now = Date.now()) {
     }
   }
 
-  if (passed === 0) return result // ei vielä lähtenyt (vaunu edellisellä vuorollaan)
+  if (passed === 0) return result // ei vielä lähtenyt (bussi / raitiovaunu edellisellä vuorollaan)
   if (passed >= stops.length) {
     return { ...result, state: 'done', traveled: geometry, remaining: [] }
   }

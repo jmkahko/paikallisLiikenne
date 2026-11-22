@@ -59,7 +59,7 @@ export function clearTripLink() {
  * Keskustori H arviolta klo 18.17"
  */
 export function tripShareText({ routeShortName, headsign, mode, from, to }) {
-  const vehicle = (mode || '').toUpperCase() === 'TRAM' ? 'Ratikka' : 'Bussi'
+  const vehicle = (mode || '').toUpperCase() === 'TRAM' ? 'Raitiovaunu' : 'Bussi'
   const parts = []
   if (from?.departure) parts.push(`lähtö ${from.name} klo ${formatClock(from.departure)}`)
   if (to?.arrival) parts.push(`perillä ${to.name} arviolta klo ${formatClock(to.arrival)}`)

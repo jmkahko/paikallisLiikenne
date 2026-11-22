@@ -35,12 +35,13 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   lähtö/määränpää ja ajosuunta, "Aikataulu"-välilehdellä vuoron kaikki pysäkit
   saapumisaikoineen (reaaliaika ja viive, kun saatavilla). Oma pysäkki on
   korostettu. Matkalla olevasta vuorosta näytetään myös **arvioitu sijainti**.
-  Näkymä päivittyy 30 sekunnin välein. Huomaa: sijainti on **pelkkä arvio
-  aikataulun perusteella** (miltä pysäkiltä vuoro on viimeksi lähtenyt ja
-  milloin) — se **ei perustu ajoneuvon GPS-sijaintiin**, eikä sitä tule
-  käyttää luotettavana tietona vaunun todellisesta sijainnista.
+  Näkymä päivittyy 30 sekunnin välein. Huomaa: bussin tai raitiovaunun
+  sijainti on **pelkkä arvio aikataulun perusteella** (miltä pysäkiltä vuoro
+  on viimeksi lähtenyt ja milloin) — se **ei perustu GPS-paikannukseen**,
+  eikä sitä tule käyttää luotettavana tietona bussin tai raitiovaunun
+  todellisesta sijainnista.
 - **Vuoron jakaminen linkkinä** — vuoronäkymän "Jaa"-painike jakaa linkin
-  juuri tähän vuoroon (esim. "olen nyt ratikassa" tai "tulen klo 13 bussilla").
+  juuri tähän vuoroon (esim. "olen nyt raitiovaunussa" tai "tulen klo 13 bussilla").
   Aikataulu-välilehdeltä voi valita pysäkin, jolla jää pois: yläreunaan tulee
   arvioitu saapumisaika, ja pysäkki tulee mukaan linkkiin. Puhelimessa
   käytetään järjestelmän jakovalikkoa, tietokoneella viesti ja linkki
