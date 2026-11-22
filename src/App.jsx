@@ -5,6 +5,8 @@ import StopCard from './components/StopCard.jsx'
 import PrivacyBanner from './components/PrivacyBanner.jsx'
 import About from './components/About.jsx'
 import Alerts from './components/Alerts.jsx'
+import TripModal from './components/TripModal.jsx'
+import { parseTripLink, clearTripLink } from './components/tripLink.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { useAlerts } from './hooks/useAlerts.js'
 import { useStopRoutes } from './hooks/useStopRoutes.js'
@@ -23,6 +25,7 @@ export default function App() {
   )
   const [aboutOpen, setAboutOpen] = useState(false)
   const [addMode, setAddMode] = useState('search') // 'search' | 'map'
+  const [sharedTrip, setSharedTrip] = useState(() => parseTripLink())
   const { alerts, error: alertsError, loading: alertsLoading } = useAlerts()
   const stopIds = stops.map((s) => s.gtfsId)
   const selectedStopIds = new Set(stopIds)
@@ -178,6 +181,15 @@ export default function App() {
 
       <PrivacyBanner />
       <About isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+      {sharedTrip && (
+        <TripModal
+          {...sharedTrip}
+          onClose={() => {
+            clearTripLink()
+            setSharedTrip(null)
+          }}
+        />
+      )}
 
       <footer className="app__footer">
         <p>

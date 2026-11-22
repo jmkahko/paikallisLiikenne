@@ -100,33 +100,51 @@ function isTampereStop(stop) {
   return !!stop && stop.gtfsId.startsWith(`${TAMPERE_FEED}:`)
 }
 
-// Vuoron (trip) reittigeometria ja pysäkit kartalle (issue #9). geometry
-// palautuu valmiina lat/lon-taulukkona, joten polyline-dekoodausta ei tarvita.
-// stoptimesForDate antaa pysäkkikohtaiset (reaaliaika)ajat → vuoron arvioitu
-// eteneminen (mitkä pysäkit ohitettu, missä välissä vaunu on nyt).
-const TRIP_PATTERN_QUERY = /* GraphQL */ `
-  query TripPattern($id: String!) {
+// Vuoron (trip) reittigeometria, pysäkit ja pysäkkikohtaiset ajat tiettynä
+// palvelupäivänä (issuet #9 ja #24). Sama trip-id ajetaan joka päivä, joten
+// päivä on pakollinen — muuten jaettu linkki näyttäisi seuraavan päivän vuoron.
+// onServiceDate korvaa vanhentuneen stoptimesForDate-kentän ja antaa ajat
+// ISO-aikaleimoina (aikataulu + reaaliaika). geometry palautuu valmiina
+// lat/lon-taulukkona, joten polyline-dekoodausta ei tarvita.
+const TRIP_QUERY = /* GraphQL */ `
+  query Trip($id: String!, $date: LocalDate!) {
     trip(id: $id) {
       gtfsId
+      tripHeadsign
+      route {
+        shortName
+        longName
+        mode
+      }
       pattern {
         geometry {
           lat
           lon
         }
-        stops {
-          gtfsId
-          name
-          code
-          lat
-          lon
-        }
       }
-      stoptimesForDate {
-        realtime
-        realtimeDeparture
-        serviceDay
-        stop {
-          gtfsId
+      onServiceDate(date: $date) {
+        stopCalls {
+          stopLocation {
+            ... on Stop {
+              gtfsId
+              name
+              code
+              lat
+              lon
+            }
+          }
+          schedule {
+            time {
+              ... on ArrivalDepartureTime {
+                arrival
+                departure
+              }
+            }
+          }
+          realTime {
+            arrival { time }
+            departure { time }
+          }
         }
       }
     }
@@ -252,44 +270,78 @@ export async function getStopsByBbox({ minLat, minLon, maxLat, maxLon }) {
   )
 }
 
-/**
- * Hae vuoron (trip) reittigeometria ja reitin pysäkit kartalle näytettäväksi
- * (issue #9). Geometria palautuu lat/lon-taulukkona valmiina Leaflet-polylineksi.
- * @param {string} tripId - vuoron gtfsId (esim. "tampere:121_19227_16714756")
- * @returns {Promise<{geometry: Array<[number, number]>, stops: Array}|null>}
- */
-export async function getTripPattern(tripId) {
-  const data = await gqlFetch(TRIP_PATTERN_QUERY, { id: tripId })
-  const trip = data?.trip
-  const pattern = trip?.pattern
-  if (!pattern) return null
+// ISO-aikaleima → epoch-ms (null jos puuttuu tai ei jäsenny).
+function isoToMs(iso) {
+  const ms = iso ? Date.parse(iso) : NaN
+  return Number.isNaN(ms) ? null : ms
+}
 
-  const geometry = (pattern.geometry || [])
+/**
+ * Palvelupäivä (YYYY-MM-DD) stoptimen serviceDay-kentästä. serviceDay on
+ * "keskipäivä − 12 h" paikallista aikaa, joten kesäaikasiirtymäpäivinä se
+ * osuu edellisen päivän puolelle — lisätään 12 h ennen muotoilua. Myös
+ * keskiyön yli ajavat vuorot saavat näin oikean (edellisen) päivän.
+ * @param {number} serviceDay - epoch-sekunnit
+ * @returns {string}
+ */
+export function toServiceDate(serviceDay) {
+  return new Date((serviceDay + 12 * 3600) * 1000).toLocaleDateString('sv-SE', {
+    timeZone: 'Europe/Helsinki'
+  })
+}
+
+/**
+ * Hae vuoron (trip) reittigeometria, linjatiedot ja pysäkit aikoineen annettuna
+ * palvelupäivänä (issuet #9 ja #24). Geometria palautuu lat/lon-taulukkona
+ * valmiina Leaflet-polylineksi.
+ * @param {string} tripId - vuoron gtfsId (esim. "tampere:121_19227_16714756")
+ * @param {string} date - palvelupäivä muodossa YYYY-MM-DD
+ * @returns {Promise<{routeShortName, routeLongName, mode, headsign,
+ *   geometry: Array<[number, number]>, stops: Array}|null>} null, jos vuoroa
+ *   ei löydy tai se ei liikennöi kyseisenä päivänä
+ */
+export async function getTrip(tripId, date) {
+  const data = await gqlFetch(TRIP_QUERY, { id: tripId, date })
+  const trip = data?.trip
+  const calls = trip?.onServiceDate?.stopCalls
+  if (!calls) return null
+
+  const geometry = (trip.pattern?.geometry || [])
     .filter((p) => p && typeof p.lat === 'number' && typeof p.lon === 'number')
     .map((p) => [p.lat, p.lon])
 
-  // Yhdistä pysäkin koordinaatit ja reaaliaika-lähtöaika. stoptimesForDate on
-  // samassa järjestyksessä kuin pattern.stops, joten zipataan indeksillä
-  // (kestää myös toistuvat gtfsId:t reitillä). departure on epoch-ms tai null.
-  const times = trip.stoptimesForDate || []
-  const stops = (pattern.stops || [])
-    .map((s, i) => {
-      const t = times[i]
-      const valid =
-        t && typeof t.serviceDay === 'number' && typeof t.realtimeDeparture === 'number'
+  // Ajat epoch-ms:inä. arrival/departure = reaaliaika jos saatavilla, muuten
+  // aikataulu; scheduled* = aikataulu (viiveen laskemiseen).
+  const stops = calls
+    .map((c) => {
+      const s = c.stopLocation || {}
+      const sched = c.schedule?.time || {}
+      const rt = c.realTime
+      const scheduledArrival = isoToMs(sched.arrival)
+      const scheduledDeparture = isoToMs(sched.departure)
       return {
         gtfsId: s.gtfsId,
         name: s.name,
         code: s.code,
         lat: s.lat,
         lon: s.lon,
-        departure: valid ? (t.serviceDay + t.realtimeDeparture) * 1000 : null,
-        realtime: t ? !!t.realtime : false
+        scheduledArrival,
+        scheduledDeparture,
+        arrival: isoToMs(rt?.arrival?.time) ?? scheduledArrival,
+        departure: isoToMs(rt?.departure?.time) ?? scheduledDeparture,
+        realtime: !!rt
       }
     })
-    .filter((s) => typeof s.lat === 'number' && typeof s.lon === 'number')
+    .filter((s) => s.gtfsId && typeof s.lat === 'number' && typeof s.lon === 'number')
 
-  return { geometry, stops }
+  return {
+    routeShortName: trip.route?.shortName ?? '',
+    routeLongName: trip.route?.longName ?? '',
+    mode: trip.route?.mode ?? 'BUS',
+    headsign: trip.tripHeadsign || trip.route?.longName || '',
+    geometry,
+    stops
+  }
 }
 
 /**
@@ -315,7 +367,8 @@ export async function getStopDepartures(stopId, numberOfDepartures = 5) {
       routeShortName: st.trip?.route?.shortName ?? '',
       routeLongName: st.trip?.route?.longName ?? '',
       mode: st.trip?.route?.mode ?? data.stop.vehicleMode ?? 'BUS',
-      tripId: st.trip?.gtfsId
+      tripId: st.trip?.gtfsId,
+      serviceDate: toServiceDate(st.serviceDay)
     }
   })
 

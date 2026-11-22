@@ -80,12 +80,17 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     │   ├── useLocalStorage.js   # Yleinen localStorage-hook
     │   ├── useDepartures.js     # Pollaa pysäkin lähtöjä, näkyvyystietoinen
     │   ├── useAlerts.js         # Pollaa häiriötiedotteita (60 s), näkyvyystietoinen
-    │   └── useStopRoutes.js     # Hakee valittujen pysäkkien reitit (tiedotekohdistus)
+    │   ├── useStopRoutes.js     # Hakee valittujen pysäkkien reitit (tiedotekohdistus)
+    │   └── useTrip.js           # Pollaa vuoron reittiä ja pysäkkiaikoja (30 s), näkyvyystietoinen
     └── components/
         ├── StopSearch.jsx     # Pysäkkihaku (debounce 350 ms)
         ├── StopMap.jsx        # Pysäkkien valinta kartalta (Leaflet + OSM-laatat)
-        ├── TripMap.jsx        # Vuoron reittiviiva + pysäkit + arvioitu sijainti (aikataulurivi → modaali)
-        ├── tripProgress.js    # Vuoron arvioitu eteneminen pysäkkien aikatauluajoista (ei GPS)
+        ├── TripModal.jsx      # Vuoronäkymä (aikataulurivi tai jaettu linkki → modaali): yhteenveto, Jaa, välilehdet
+        ├── TripMap.jsx        # Vuoron reittiviiva + pysäkit + arvioitu sijainti (Kartta-välilehti)
+        ├── TripTimetable.jsx  # Vuoron pysäkit ja ajat, jääpoispysäkin valinta (Aikataulu-välilehti)
+        ├── TripShare.jsx      # Jaa-painike: jakovalikko → leikepöytä → käsin kopioitava kenttä
+        ├── tripLink.js        # Jaettavan vuorolinkin (?trip=&date=&from=&to=) muodostus, luku ja viestiteksti
+        ├── tripProgress.js    # Vuoron arvioitu eteneminen pysäkkien aikatauluajoista (ei GPS) + aika-apurit
         ├── mapShared.js       # Jaetut karttatyökalut (OSM-laatat, divIcon-ikonit)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
         ├── Alerts.jsx         # Häiriötiedotteet: avattava paneeli + "kaikki"-modaali
@@ -218,7 +223,9 @@ Git-haarat poistetaan mergen jälkeen (squash-PR, `--delete-branch`).
 
 - **GraphQL-skeema**: Digitransit v2 ei tue kaikkia v1:n argumentteja
   (esim. `stops(maxResults: ...)` ei toimi). Validoi kenttä-argumentit
-  Digitransit-portaalin GraphiQL:llä ennen julkaisua.
+  Digitransit-portaalin GraphiQL:llä ennen julkaisua. `Trip.stoptimesForDate`
+  on vanhentunut — vuoron ajat haetaan `trip.onServiceDate(date: "YYYY-MM-DD")
+  { stopCalls … }`, joka palauttaa ISO-aikaleimat (aikataulu + reaaliaika).
 - **Service day -aikalaskenta**: `stoptimesWithoutPatterns` palauttaa ajat
   sekunteina `serviceDay`:n päälle. Älä unohda kertoa 1000:lla muunnoksessa
   `Date`-objektiksi (`(serviceDay + secs) * 1000`).

@@ -1,6 +1,19 @@
 // Vuoron arvioitu eteneminen pysäkkien aikatauluajoista (ei GPS:ää).
 // Käytetään TripMap-kartassa: mitkä pysäkit on jo ohitettu ja missä reitin
-// välissä vaunu on juuri nyt.
+// välissä vaunu on juuri nyt. Lisäksi vuoronäkymän yhteiset aika-apurit.
+
+export function formatClock(ms) {
+  return new Date(ms).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Nousu- ja jääpoispysäkin indeksit vuoron pysäkkilistalla (-1, jos ei valittu
+// tai ei reitillä). Jääpoispysäkkiä haetaan vasta nousun jälkeen, jotta
+// silmukkareitillä kahdesti esiintyvä pysäkki osuu oikeaan kohtaan.
+export function findLegIndexes(stops, fromId, toId) {
+  const fromIdx = fromId ? stops.findIndex((s) => s.gtfsId === fromId) : -1
+  const toIdx = toId ? stops.findIndex((s, i) => i > fromIdx && s.gtfsId === toId) : -1
+  return { fromIdx, toIdx }
+}
 
 // Lähin geometriapiste annettuun koordinaattiin (neliöetäisyys riittää).
 export function nearestIndex(geometry, lat, lon) {

@@ -11,7 +11,21 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 
 ## [Ei julkaistu]
 
+### Lisätty
+- Vuoron jakaminen linkkinä: vuoronäkymän "Jaa"-painike jakaa linkin juuri
+  tiettyyn bussi- tai raitiovaunuvuoroon (järjestelmän jakovalikko,
+  leikepöytä tai käsin kopioitava kenttä). Linkki avaa vuoronäkymän suoraan
+  myös käyttäjälle, jolla ei ole pysäkkejä valittuna. ([#24])
+- Vuoronäkymään "Aikataulu"-välilehti: vuoron kaikki pysäkit
+  saapumisaikoineen, reaaliaikamerkki ja viive. Pysäkin, jolla jää pois, voi
+  valita — sen arvioitu saapumisaika näkyy yläreunassa ja pysäkki tulee
+  mukaan jaettavaan linkkiin. ([#24])
+
 ### Muutettu
+- Vuoronäkymä päivittyy nyt 30 sekunnin välein (arvioitu sijainti ja
+  reaaliaika-ajat), ja vuoron tiedot haetaan tietylle palvelupäivälle
+  Digitransitin `onServiceDate`-kentällä vanhentuneen `stoptimesForDate`-kentän
+  sijaan. ([#24])
 - PHP-proxy etsii `config.php`:n nyt automaattisesti ensin web-rootin
   yläpuolelta (`/home/käyttäjä/config.php`) ja sitten omasta kansiostaan
   (`public_html/api/config.php`). Aiemmin dokumentaatio ohjeisti sijoittamaan
@@ -127,4 +141,5 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#6]: https://github.com/jmkahko/paikallisLiikenne/issues/6
 [#16]: https://github.com/jmkahko/paikallisLiikenne/issues/16
 [#19]: https://github.com/jmkahko/paikallisLiikenne/issues/19
+[#24]: https://github.com/jmkahko/paikallisLiikenne/issues/24
 [#25]: https://github.com/jmkahko/paikallisLiikenne/issues/25

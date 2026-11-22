@@ -30,13 +30,24 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 - Seuraavat lähdöt per pysäkki: linja, määränpää, lähtöaika ja "min"-laskuri.
   Näytettävien lähtöjen määrän (1–5) voi valita itse — kätevää kapealla
   puhelimen näytöllä. Valinta tallennetaan selaimeen.
-- **Vuoron reitti kartalla** — klikkaamalla aikatauluriviä avautuu kartta,
-  jossa näkyy linjan reittiviiva, pysäkit, lähtö/määränpää ja ajosuunta. Oma
-  pysäkki on korostettu. Matkalla olevasta vuorosta näytetään myös **arvioitu
-  sijainti**. Huomaa: sijainti on **pelkkä arvio aikataulun perusteella** (miltä
-  pysäkiltä vuoro on viimeksi lähtenyt ja milloin) — se **ei perustu ajoneuvon
-  GPS-sijaintiin**, eikä sitä tule käyttää luotettavana tietona vaunun
-  todellisesta sijainnista.
+- **Vuoron reitti ja aikataulu** — klikkaamalla aikatauluriviä avautuu
+  vuoronäkymä. "Kartta"-välilehdellä näkyy linjan reittiviiva, pysäkit,
+  lähtö/määränpää ja ajosuunta, "Aikataulu"-välilehdellä vuoron kaikki pysäkit
+  saapumisaikoineen (reaaliaika ja viive, kun saatavilla). Oma pysäkki on
+  korostettu. Matkalla olevasta vuorosta näytetään myös **arvioitu sijainti**.
+  Näkymä päivittyy 30 sekunnin välein. Huomaa: sijainti on **pelkkä arvio
+  aikataulun perusteella** (miltä pysäkiltä vuoro on viimeksi lähtenyt ja
+  milloin) — se **ei perustu ajoneuvon GPS-sijaintiin**, eikä sitä tule
+  käyttää luotettavana tietona vaunun todellisesta sijainnista.
+- **Vuoron jakaminen linkkinä** — vuoronäkymän "Jaa"-painike jakaa linkin
+  juuri tähän vuoroon (esim. "olen nyt ratikassa" tai "tulen klo 13 bussilla").
+  Aikataulu-välilehdeltä voi valita pysäkin, jolla jää pois: yläreunaan tulee
+  arvioitu saapumisaika, ja pysäkki tulee mukaan linkkiin. Puhelimessa
+  käytetään järjestelmän jakovalikkoa, tietokoneella viesti ja linkki
+  kopioidaan leikepöydälle. Ilman HTTPS-yhteyttä (paitsi `localhost`) linkki
+  näytetään tekstikenttänä kopioitavaksi. Linkki avaa vuoronäkymän suoraan,
+  myös käyttäjälle, jolla ei ole yhtään pysäkkiä valittuna. Linkki on
+  sidottu päivään: myöhemmin avattuna se näyttää, että vuoro on päättynyt.
 - Reaaliaikamerkki (vihreä piste) kun aikataulutieto on liikenteen GPS:stä.
 - Automaattinen päivitys 30 sekunnin välein. Manuaalinen päivitys napilla.
 - Polling pysähtyy, kun välilehti ei ole näkyvissä (Page Visibility API),
@@ -90,6 +101,10 @@ sivulatausten yli.
   ei vielä ota yhteyttä OpenStreetMapiin, joten erillistä suostumusta ei
   kysytä — asiasta kerrotaan tietosuojailmoituksessa ja Tietoja-ikkunassa.
   Ks. [OpenStreetMap Foundationin tietosuojakäytäntö](https://osmfoundation.org/wiki/Privacy_Policy).
+- **Jaettu vuorolinkki** sisältää vain vuoron tunnisteen, päivän sekä
+  valitut nousu- ja jääpoispysäkit — ei henkilötietoja. Linkin saaja näkee
+  silti, millä vuorolla ja minne olet menossa, joten jaa se vain niille,
+  joille haluat sen kertoa.
 - **Ylläpitäjä ja yhteydenotot**: kahkonen.dev,
   [GitHubin Issues](https://github.com/jmkahko/paikallisLiikenne/issues).
   Jos julkaiset sovelluksen omalla sivustollasi, päivitä nämä tiedot
@@ -286,6 +301,7 @@ Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
 | `HTTP 401` | Avain on väärä tai tilaus ei ole voimassa. Tarkista avain Digitransit-portaalista. |
 | Devissä `Unexpected token '<'` / `is not valid JSON` | `.env`:stä puuttuu `DIGITRANSIT_ENDPOINT`, jolloin Vite ei luo proxya ja palauttaa `digitransit.php`:n lähdekoodin JSONin sijaan. Käynnistä `npm run dev` uudelleen `.env`:n muokkauksen jälkeen. |
 | `HTTP 502: Upstream-virhe` | Palvelin ei saa yhteyttä Digitransitiin: väärä `DIGITRANSIT_ENDPOINT`, hostingin palomuuri tai Digitransitin katko. |
+| Jaettu linkki: `Vuoroa ei löytynyt tälle päivälle.` | Vuoro ei liikennöi linkin päivänä, tai vuorojen tunnisteet ovat vaihtuneet aikataulukauden vaihtuessa. Linkki on tarkoitettu saman päivän käyttöön. |
 
 ## Tekninen yhteenveto
 
@@ -309,8 +325,14 @@ Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
   `.env`-tiedostosta.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
 - Lähdöt päivitetään `setInterval`-ajastimella 30 s välein
-  (`useDepartures`-hook) ja häiriötiedotteet 60 s välein (`useAlerts`).
-  Molemmat pysähtyvät `visibilitychange`-tapahtumaan, kun välilehti on piilossa.
+  (`useDepartures`-hook), avoin vuoronäkymä 30 s välein (`useTrip`) ja
+  häiriötiedotteet 60 s välein (`useAlerts`). Kaikki pysähtyvät
+  `visibilitychange`-tapahtumaan, kun välilehti on piilossa.
+- Vuoron pysäkkiajat haetaan tietylle palvelupäivälle
+  (`trip.onServiceDate(date:)`), koska sama vuorotunniste ajetaan joka päivä.
+  Jaettava linkki on muotoa
+  `/?trip=tampere:…&date=YYYY-MM-DD&from=tampere:…&to=tampere:…` ja osoittaa
+  `index.html`:ään, joten web-hotelliin ei tarvita uudelleenohjaussääntöjä.
 - **Docker**: `Dockerfile` (multi-stage: node-build → php-apache) ja
   `docker-compose.yml` simuloivat web-hotelli-ympäristöä.
 

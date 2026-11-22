@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDepartures } from '../hooks/useDepartures.js'
-import TripMap from './TripMap.jsx'
+import TripModal from './TripModal.jsx'
 
 const MODE_LABEL = {
   BUS: 'Bussi',
@@ -136,12 +136,13 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
                       onClick={() =>
                         setActiveTrip({
                           tripId: d.tripId,
+                          date: d.serviceDate,
                           routeShortName: d.routeShortName,
                           headsign,
                           mode: d.mode
                         })
                       }
-                      title="Näytä reitti kartalla"
+                      title="Näytä reitti ja aikataulu"
                     >
                       {inner}
                     </button>
@@ -165,9 +166,10 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
       </footer>
     </article>
     {activeTrip && (
-      <TripMap
+      <TripModal
         tripId={activeTrip.tripId}
-        stopId={stop.gtfsId}
+        date={activeTrip.date}
+        fromId={stop.gtfsId}
         routeShortName={activeTrip.routeShortName}
         headsign={activeTrip.headsign}
         mode={activeTrip.mode}
