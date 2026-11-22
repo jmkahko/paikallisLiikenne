@@ -1087,8 +1087,13 @@ a {
   flex-direction: column;
 }
 
+/* Sisältö vierii modaalissa — älä kutista välilehtiä tai karttaa. */
+.modal__content--map > * {
+  flex-shrink: 0;
+}
+
 .trip-map {
-  height: 60vh;
+  height: 52vh;
   width: 100%;
   border-bottom-left-radius: var(--radius);
   border-bottom-right-radius: var(--radius);
@@ -1155,6 +1160,174 @@ a {
   font-style: italic;
 }
 
+/* ---- Vuoron yhteenveto, jakaminen ja aikataulu ---- */
+.trip-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.trip-summary__times {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-share {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.trip-share__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-share__btn:hover {
+  filter: brightness(1.1);
+}
+
+.trip-share__status {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.trip-share__manual {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.trip-share__url {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.trip-modal__tabs {
+  margin: 0.75rem 1rem;
+}
+
+.trip-timetable {
+  padding: 0 1rem 1rem;
+}
+
+.trip-timetable__hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.trip-timetable__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trip-stop + .trip-stop {
+  border-top: 1px solid var(--border);
+}
+
+.trip-stop__btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trip-stop__btn:hover:not(:disabled),
+.trip-stop__btn:focus-visible {
+  background: var(--card-2);
+  outline: none;
+}
+
+.trip-stop__btn:disabled {
+  cursor: default;
+}
+
+.trip-stop__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 4.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-stop__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-stop__code {
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.trip-stop__delay {
+  font-size: 0.8rem;
+  color: var(--warn-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-stop__role {
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.trip-stop--passed {
+  opacity: 0.5;
+}
+
+.trip-stop--leg .trip-stop__btn {
+  background: var(--accent-soft);
+}
+
 @media (max-width: 480px) {
   .app {
     padding: 1.25rem 0.75rem 3rem;
@@ -1199,9 +1372,12 @@ a {
   .modal__footer {
     padding: 1rem 1.25rem;
   }
-  .stop-map,
-  .trip-map {
+  .stop-map {
     height: 65vh;
+  }
+  /* Yhteenveto ja välilehdet vievät tilaa → kartta matalampi kuin StopMap. */
+  .trip-map {
+    height: 50vh;
   }
   .trip-map__title {
     font-size: 1.05rem;
