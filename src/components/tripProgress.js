@@ -3,8 +3,9 @@
 // välissä bussi tai raitiovaunu on juuri nyt. Lisäksi vuoronäkymän yhteiset
 // aika-apurit.
 
-export function formatClock(ms) {
-  return new Date(ms).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
+// locale tulee tietokannasta valitun kielen mukaan (useLanguage().locale).
+export function formatClock(ms, locale) {
+  return new Date(ms).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 // Nousu- ja jääpoispysäkin indeksit vuoron pysäkkilistalla (-1, jos ei valittu

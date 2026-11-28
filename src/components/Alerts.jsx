@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { useLanguage, useText } from '../i18n/texts.jsx'
 
-const SEVERITY_LABEL = {
-  INFO: 'Tiedote',
-  WARNING: 'Varoitus',
-  SEVERE: 'Vakava',
-  UNKNOWN_SEVERITY: 'Tiedote'
+const SEVERITY_KEY = {
+  INFO: 'alerts.severity.info',
+  WARNING: 'alerts.severity.warning',
+  SEVERE: 'alerts.severity.severe',
+  UNKNOWN_SEVERITY: 'alerts.severity.info'
 }
 
 // Lajittelu: vakavin ensin, saman vakavuuden sisällä tuorein (myöhäisin
@@ -20,29 +21,31 @@ function compareAlerts(a, b) {
   return bStart - aStart
 }
 
-function formatRange(start, end) {
+function formatRange(start, end, t, locale) {
   const fmt = (d) =>
-    d.toLocaleDateString('fi-FI', { day: 'numeric', month: 'numeric' })
+    d.toLocaleDateString(locale, { day: 'numeric', month: 'numeric' })
   if (start && end) return `${fmt(start)}–${fmt(end)}`
-  if (start) return `${fmt(start)} alkaen`
-  if (end) return `${fmt(end)} saakka`
+  if (start) return t('alerts.from', [fmt(start)])
+  if (end) return t('alerts.until', [fmt(end)])
   return ''
 }
 
 function AlertItem({ alert }) {
+  const t = useText()
+  const { locale } = useLanguage()
   const sev = (alert.severity || 'UNKNOWN_SEVERITY').toLowerCase()
-  const range = formatRange(alert.start, alert.end)
+  const range = formatRange(alert.start, alert.end, t, locale)
   return (
     <li className={`alert-item alert-item--${sev}`}>
       <div className="alert-item__head">
         <span className="alert-item__sev">
-          {SEVERITY_LABEL[alert.severity] || 'Tiedote'}
+          {t(SEVERITY_KEY[alert.severity] || 'alerts.severity.info')}
         </span>
         {range && <span className="alert-item__dates">{range}</span>}
       </div>
       {alert.routeNames.length > 0 && (
         <p className="alert-item__routes">
-          Linjat: {alert.routeNames.join(', ')}
+          {t('alerts.routes', [alert.routeNames.join(', ')])}
         </p>
       )}
       {alert.header && <p className="alert-item__header">{alert.header}</p>}
@@ -56,7 +59,7 @@ function AlertItem({ alert }) {
           rel="noreferrer"
           className="alert-item__link"
         >
-          Lisätietoja →
+          {t('alerts.moreInfo')}
         </a>
       )}
     </li>
@@ -64,19 +67,20 @@ function AlertItem({ alert }) {
 }
 
 function AlertsModal({ isOpen, onClose, alerts }) {
+  const t = useText()
   if (!isOpen) return null
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
-          <h2>Kaikki häiriötiedotteet ({alerts.length})</h2>
-          <button className="modal__close" onClick={onClose} aria-label="Sulje">
+          <h2>{t('alerts.modalTitle', [alerts.length])}</h2>
+          <button className="modal__close" onClick={onClose} aria-label={t('common.close')}>
             ✕
           </button>
         </div>
         <div className="modal__content">
           {alerts.length === 0 ? (
-            <p>Ei voimassa olevia häiriötiedotteita.</p>
+            <p>{t('alerts.noneActive')}</p>
           ) : (
             <ul className="alerts__list">
               {alerts.map((a) => (
@@ -87,7 +91,7 @@ function AlertsModal({ isOpen, onClose, alerts }) {
         </div>
         <div className="modal__footer">
           <button className="modal__btn-close" onClick={onClose}>
-            Sulje
+            {t('common.close')}
           </button>
         </div>
       </div>
@@ -102,6 +106,7 @@ export default function Alerts({
   selectedStopIds,
   selectedRouteNames
 }) {
+  const t = useText()
   const [expanded, setExpanded] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -129,7 +134,7 @@ export default function Alerts({
         aria-expanded={expanded}
       >
         <span className="alerts__title">
-          <span aria-hidden="true">⚠️</span> Häiriötiedotteet
+          <span aria-hidden="true">⚠️</span> {t('alerts.title')}
           {relevant.length > 0 && (
             <span className="alerts__badge">{relevant.length}</span>
           )}
@@ -143,14 +148,12 @@ export default function Alerts({
         <div className="alerts__body">
           {error && (
             <p className="alerts__error">
-              Häiriötiedotteiden haku epäonnistui: {error.message || String(error)}
+              {t('alerts.loadError', [error.message || String(error)])}
             </p>
           )}
           {!error && relevant.length > 0 && (
             <>
-              <p className="alerts__note">
-                Vaikuttavat valitsemiisi pysäkkeihin:
-              </p>
+              <p className="alerts__note">{t('alerts.affecting')}</p>
               <ul className="alerts__list">
                 {relevant.map((a) => (
                   <AlertItem key={a.id} alert={a} />
@@ -159,16 +162,14 @@ export default function Alerts({
             </>
           )}
           {!error && relevant.length === 0 && (
-            <p className="alerts__note">
-              Ei häiriöitä valitsemillasi pysäkeillä.
-            </p>
+            <p className="alerts__note">{t('alerts.noneAtStops')}</p>
           )}
           <button
             type="button"
             className="alerts__show-all"
             onClick={() => setModalOpen(true)}
           >
-            Näytä kaikki häiriötiedotteet ({alerts.length}) →
+            {t('alerts.showAll', [alerts.length])}
           </button>
         </div>
       )}

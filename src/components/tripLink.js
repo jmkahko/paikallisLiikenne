@@ -54,15 +54,18 @@ export function clearTripLink() {
 }
 
 /**
- * Viestiteksti jaettavaksi linkin kanssa, esim.
+ * Viestiteksti jaettavaksi linkin kanssa valitulla kielellä, esim.
  * "Bussi 40C → Keskustori: lähtö Kangasalan asema th klo 17.27, perillä
  * Keskustori H arviolta klo 18.17"
+ * @param {{t: Function, locale: string}} - useText() ja useLanguage().locale
  */
-export function tripShareText({ routeShortName, headsign, mode, from, to }) {
-  const vehicle = (mode || '').toUpperCase() === 'TRAM' ? 'Raitiovaunu' : 'Bussi'
+export function tripShareText({ routeShortName, headsign, mode, from, to, t, locale }) {
+  const vehicle = t((mode || '').toUpperCase() === 'TRAM' ? 'common.mode.tram' : 'common.mode.bus')
   const parts = []
-  if (from?.departure) parts.push(`lähtö ${from.name} klo ${formatClock(from.departure)}`)
-  if (to?.arrival) parts.push(`perillä ${to.name} arviolta klo ${formatClock(to.arrival)}`)
+  if (from?.departure) {
+    parts.push(t('trip.share.departure', [from.name, formatClock(from.departure, locale)]))
+  }
+  if (to?.arrival) parts.push(t('trip.share.arrival', [to.name, formatClock(to.arrival, locale)]))
   const head = `${vehicle} ${routeShortName} → ${headsign}`
   return parts.length ? `${head}: ${parts.join(', ')}` : head
 }
@@ -73,10 +76,10 @@ export function tripShareText({ routeShortName, headsign, mode, from, to }) {
  * linkki näytetään käyttäjälle kopioitavaksi.
  * @returns {Promise<'shared'|'cancelled'|'copied'|'manual'>}
  */
-export async function shareTripLink(url, text) {
+export async function shareTripLink(url, text, title) {
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Paikallisliikenne', text, url })
+      await navigator.share({ title, text, url })
       return 'shared'
     } catch (e) {
       if (e?.name === 'AbortError') return 'cancelled'

@@ -12,6 +12,21 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 ## [Ei julkaistu]
 
 ### Lisätty
+- Käyttöliittymän tekstit haetaan MySQL-tietokannasta (`api/texts.php`), mikä
+  mahdollistaa tekstien muokkaamisen ilman uutta käännöstä ja useamman kielen.
+  Kielet ovat tietokantarivejä: uuden kielen voi lisätä ilman koodimuutoksia,
+  ja puuttuva käännös näytetään suomeksi. Tekstit ryhmitellään näkymittäin, ja
+  muuttuvat kohdat (luvut, linkit) merkitään `{0}`, `{1}`… Kaikki
+  käyttöliittymän tekstit on siirretty tietokantaan. Kielinä ovat suomi ja
+  englanti: otsikkoriville tulee kielivalinta FI | EN (valittu lihavoituna);
+  oletuskieli on suomi ja oma valinta muistetaan. Kellonajat ja päivämäärät
+  muotoillaan valitun kielen mukaan, ja häiriötiedotteet sekä niiden
+  lisätietolinkit haetaan Digitransitista valitulla kielellä. Jos tietokanta
+  ei vastaa, sovellus näyttää vikailmoituksen ja "Yritä uudelleen"
+  -painikkeen.
+  Docker-simulaatioon lisättiin MySQL 8.4 -container ja phpMyAdmin
+  (<http://localhost:8081>), ja web-hotellissa
+  tietokanta luodaan `db/*.sql`-tiedostoilla (ks. README). ([#29])
 - Vuoron jakaminen linkkinä: vuoronäkymän "Jaa"-painike jakaa linkin juuri
   tiettyyn bussi- tai raitiovaunuvuoroon (järjestelmän jakovalikko,
   leikepöytä tai käsin kopioitava kenttä). Linkki avaa vuoronäkymän suoraan
@@ -152,3 +167,4 @@ Käyttäjälle näkyvä versiohistoria löytyy myös sovelluksen Tietoja-ikkunas
 [#24]: https://github.com/jmkahko/paikallisLiikenne/issues/24
 [#25]: https://github.com/jmkahko/paikallisLiikenne/issues/25
 [#28]: https://github.com/jmkahko/paikallisLiikenne/issues/28
+[#29]: https://github.com/jmkahko/paikallisLiikenne/issues/29

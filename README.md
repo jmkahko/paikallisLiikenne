@@ -6,6 +6,7 @@ seuraavia bussi- ja raitiovaunulähtöjä reaaliaikaisesti. Voit lisätä jopa
 
 Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 (Waltti / Tampere) **PHP-proxyn kautta**, joka pitää API-avaimen palvelimella.
+Käyttöliittymän tekstit haetaan sovelluksen omasta **MySQL-tietokannasta**.
 
 **Sisällys:**
 [Ominaisuudet](#ominaisuudet) ·
@@ -15,6 +16,7 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
 [Asennus ja kehitys](#asennus-ja-kehitys) ·
 [Web-hotelli-simulaatio (Docker)](#web-hotelli-simulaatio-docker) ·
 [Julkaisu web-hotellille](#julkaisu-web-hotellille) ·
+[Tekstit ja kielet](#tekstit-ja-kielet) ·
 [Vianetsintä](#vianetsintä) ·
 [Tekninen yhteenveto](#tekninen-yhteenveto) ·
 [Lisenssi & lähteet](#lisenssi--lähteet)
@@ -69,6 +71,18 @@ Tiedot haetaan [Digitransit](https://digitransit.fi/) GraphQL-rajapinnasta
   ja vastuuvapautus. Avataan ℹ️-napilla oikeassa yläkulmassa.
 - **Versiotieto** — About-ikkunassa näkyy käytössä oleva versio ja julkaisupäivä
   sekä linkki täyteen versiohistoriaan: [`CHANGELOG.md`](CHANGELOG.md).
+- **Tekstit tietokannassa ja kielet** — kaikki käyttöliittymän tekstit
+  haetaan MySQL:stä, joten niitä voi muokata ilman uutta käännöstä ja kieliä
+  voi lisätä ilman koodimuutoksia (ks. [Tekstit ja kielet](#tekstit-ja-kielet)).
+  Kielinä ovat suomi ja englanti: otsikkorivin kielivalinnasta **FI | EN**
+  (valittu kieli lihavoituna) voi vaihtaa kieltä. Oletuskieli on suomi, ja
+  oma valinta muistetaan. Myös
+  kellonajat ja päivämäärät muotoillaan valitun kielen mukaan, ja
+  häiriötiedotteet sekä niiden "Lisätietoja"-linkit haetaan Digitransitista
+  valitulla kielellä (jos Nysse ei ole kääntänyt tiedotetta, se näytetään
+  suomeksi). Pysäkkien ja linjojen nimet ovat samat kaikilla kielillä. Jos
+  tietokanta ei vastaa, sovellus näyttää vikailmoituksen ja
+  "Yritä uudelleen" -painikkeen.
 
 ## Pysäkkien lisääminen
 
@@ -88,7 +102,8 @@ sivulatausten yli.
 ## Tietosuoja ja tietoturva
 
 - **Selaimeen tallennetaan** vain pysäkkivalinnat, näytettävien lähtöjen
-  määrä ja tieto tietosuojailmoituksen kuittaamisesta (`localStorage`).
+  määrä, itse valittu kieli (vain jos kieli valitaan) ja tieto
+  tietosuojailmoituksen kuittaamisesta (`localStorage`).
   Valintoja ei tallenneta palvelimelle. Evästeitä tai analytiikkaa ei käytetä.
 - **Pysäkki- ja aikataulutiedot** haetaan oman palvelimen PHP-proxyn kautta;
   selain ei ota yhteyttä Digitransitiin suoraan, joten Digitransit ei näe
@@ -109,7 +124,8 @@ sivulatausten yli.
 - **Ylläpitäjä ja yhteydenotot**: kahkonen.dev,
   [GitHubin Issues](https://github.com/jmkahko/paikallisLiikenne/issues).
   Jos julkaiset sovelluksen omalla sivustollasi, päivitä nämä tiedot
-  `src/components/About.jsx`:ään.
+  tietokannan tekstiin `about.privacy.contact` (`db/02-texts-fi.sql` ja
+  `db/03-texts-en.sql`).
 - **API-avain pysyy palvelimella** — selaimessa ei ole avainta missään
   vaiheessa. PHP-proxy lisää avaimen ja välittää GraphQL-kutsut Digitransitiin.
 - **Origin-tarkistus** — proxy hyväksyy vain pyynnöt, joiden `Origin`-header
@@ -130,7 +146,9 @@ Digitransit vaatii ilmaisen subscription keyn.
 
 ## Asennus ja kehitys
 
-Tarvitset [Node.js 20+](https://nodejs.org/).
+Tarvitset [Node.js 20+](https://nodejs.org/) ja
+[Dockerin](#web-hotelli-simulaatio-docker): käyttöliittymän tekstit tulevat
+MySQL-tietokannasta, jota ajetaan devissäkin Docker-containerissa.
 
 ```bash
 # 1. Asenna riippuvuudet
@@ -142,15 +160,22 @@ cp .env.example .env
 #   DIGITRANSIT_API_KEY=oma-avaimesi
 #   DIGITRANSIT_ENDPOINT=https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/
 #   ALLOWED_ORIGIN=http://localhost:8080
+#   DB_NAME=paikallis, DB_USER=paikallis, DB_PASSWORD=keksi-salasana
 # (HUOM: muuttujissa EI ole VITE_-prefixiä — arvot eivät mene selainbundleen.)
 
-# 3. Käynnistä kehityspalvelin
+# 3. Käynnistä tietokanta ja PHP (tekstit) Dockerissa
+docker compose up --build -d
+
+# 4. Käynnistä kehityspalvelin
 npm run dev
 ```
 
 Sovellus avautuu osoitteessa <http://localhost:5173>. Vite-dev-palvelin
 proxyttää `/api/digitransit.php` -kutsut suoraan Digitransitiin ja lisää
 avaimen palvelinpuolella, joten avain pysyy palvelimella myös devissä.
+`/api/texts.php` -kutsut se ohjaa Docker-containerin PHP:lle
+(<http://localhost:8080>), joka lukee tekstit MySQL:stä. Jos Docker ei ole
+käynnissä, sovellus näyttää vikailmoituksen.
 
 Dev-tilassa PHP:tä ei ajeta, joten `ALLOWED_ORIGIN`-tarkistustakaan ei tehdä —
 arvoa käytetään vasta Dockerissa ja web-hotellissa. `DIGITRANSIT_ENDPOINT` on
@@ -164,7 +189,7 @@ npm run preview    # esikatselu osoitteessa http://localhost:4173
 ```
 
 `npm run preview` käyttää samaa Vite-proxya kuin `npm run dev`, joten `/api`
-toimii, mutta **PHP-proxya ei ajeta**. Kun haluat testata PHP-proxyn
+toimii (tekstit Dockerin kautta), mutta **`digitransit.php`:tä ei ajeta**. Kun haluat testata PHP-proxyn
 (esim. `digitransit.php`:n muutokset tai origin-tarkistuksen), käytä
 [Dockeria](#web-hotelli-simulaatio-docker).
 
@@ -172,19 +197,22 @@ toimii, mutta **PHP-proxya ei ajeta**. Kun haluat testata PHP-proxyn
 
 Ennen julkaisua oikealle web-hotellille voit testata sovelluksen
 Docker-containerissa, joka jäljittelee tyypillistä shared-hosting-
-ympäristöä: **Apache 2.4 + PHP 8** ja staattisten tiedostojen serveri.
+ympäristöä: **Apache 2.4 + PHP 8 + MySQL 8 + phpMyAdmin** ja staattisten
+tiedostojen serveri.
 
 **Vaatimukset:** Docker ja Docker Compose v2
 ([Docker Desktop](https://www.docker.com/products/docker-desktop/), tai
 Linuxilla Docker Engine + `docker-compose-plugin`).
 
 ```bash
-# 1. Varmista että .env on luotu ja kaikki kolme muuttujaa täytetty
-#    (DIGITRANSIT_API_KEY, DIGITRANSIT_ENDPOINT, ALLOWED_ORIGIN=http://localhost:8080).
+# 1. Varmista että .env on luotu ja muuttujat täytetty
+#    (DIGITRANSIT_API_KEY, DIGITRANSIT_ENDPOINT, ALLOWED_ORIGIN=http://localhost:8080,
+#    DB_NAME, DB_USER, DB_PASSWORD).
 # 2. Käännä + käynnistä container yhdellä komennolla:
 docker compose up --build
 
-# Sovellus näkyy: http://localhost:8080
+# Sovellus näkyy:  http://localhost:8080
+# phpMyAdmin:      http://localhost:8081 (tunnukset .env:n DB_USER / DB_PASSWORD)
 ```
 
 Container tekee sisäisesti:
@@ -193,10 +221,34 @@ Container tekee sisäisesti:
 2. Kopioi `dist/`-kansion sisällön Apachen `/var/www/html`-juureen
    (kuten `public_html` web-hotellissa). Tähän kuuluu myös
    `dist/api/digitransit.php`.
-3. Käynnistää Apachen + PHP:n portille 80, joka mapataan hostin porttiin 8080.
-4. Välittää ympäristömuuttujat (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`,
-   `DIGITRANSIT_ENDPOINT`) PHP-prosessille `PassEnv`:llä. Kaikki arvot
-   luetaan `.env`-tiedostosta — täytä se ennen käynnistystä.
+3. Asentaa PHP:hen `pdo_mysql`-laajennuksen (web-hotelleissa se on yleensä
+   valmiina).
+4. Käynnistää Apachen + PHP:n portille 80, joka mapataan hostin porttiin 8080.
+5. Välittää ympäristömuuttujat (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`,
+   `DIGITRANSIT_ENDPOINT`, `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`)
+   PHP-prosessille `PassEnv`:llä. Arvot luetaan `.env`-tiedostosta — täytä se
+   ennen käynnistystä. `DB_HOST` on `docker-compose.yml`:ssä kiinteästi `db`.
+6. Käynnistää erillisen `db`-containerin (MySQL 8.4), joka luo `.env`:n
+   tietokannan ja käyttäjän ja ajaa `db/`-kansion SQL-tiedostot (skeema sekä
+   suomen- ja englanninkieliset tekstit). Data säilyy `db-data`-volumessa.
+7. Käynnistää **phpMyAdminin** osoitteeseen <http://localhost:8081>, kuten
+   web-hotellissa. Sillä voi muokata tekstejä ja harjoitella SQL-tiedostojen
+   tuontia ennen julkaisua. Portti on sidottu vain omaan koneeseen
+   (`127.0.0.1`).
+
+**Huom:** MySQL ajaa `db/*.sql`-tiedostot vain ensimmäisellä käynnistyksellä,
+kun volume on tyhjä. `docker compose up --build` päivittää sovelluksen, mutta
+ei kannan tekstejä, joten uudet tekstit näkyvät sovelluksessa avaimina (esim.
+`stopCard.remove`), kunnes tiedostot ajetaan kantaan. Kun `db/*.sql` muuttuu,
+aja tiedostot olemassa olevaan kantaan joko phpMyAdminin Tuo-välilehdellä (<http://localhost:8081>)
+tai komentoriviltä:
+
+```bash
+for f in db/0*.sql; do docker compose exec -T db sh -c 'mysql --default-character-set=utf8mb4 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' < "$f"; done
+```
+
+Kannan voi myös nollata kokonaan: `docker compose down -v` ja sitten
+`docker compose up --build` (tarpeen myös, jos muutat `.env`:n `DB_*`-arvoja).
 
 Avain ei näy selaimessa, ei build-imagen kerroksissa, vaan ainoastaan
 runtime-ympäristössä. Sammutus: `Ctrl+C` tai `docker compose down`.
@@ -214,14 +266,16 @@ saatavilla selaimesta.
 
 ```
 /home/käyttäjä/
-├── config.php              ← API-avain turvassa (web-rootin yläpuolella)
+├── config.php              ← API-avain ja tietokantatunnukset turvassa (web-rootin yläpuolella)
 └── public_html/            ← web-root (näkyy webbissä)
     ├── index.html
     ├── assets/
     └── api/
         ├── digitransit.php     ← PHP-proxy
+        ├── texts.php           ← käyttöliittymän tekstit MySQL:stä
+        ├── config-loader.php   ← asetusten luku (.htaccess estää latauksen)
         ├── config.example.php  ← malli (.htaccess estää latauksen)
-        └── .htaccess           ← estää config.php:n ja mallin latauksen
+        └── .htaccess           ← estää config.php:n, apurin ja mallin latauksen
 ```
 
 ### Vaiheet
@@ -237,7 +291,22 @@ saatavilla selaimesta.
    - Varmista, että myös piilotiedosto `api/.htaccess` siirtyy — monet
      FTP-ohjelmat piilottavat pisteellä alkavat tiedostot oletuksena.
 
-3. **Anna asetukset** jommallakummalla tavalla:
+3. **Luo tietokanta tekstejä varten** hostingin hallintapaneelissa (esim.
+   cPanelin "MySQL Databases"):
+   - Luo tietokanta ja käyttäjä. Käyttäjälle riittää **SELECT**-oikeus
+     (sovellus vain lukee tekstejä).
+   - Valitse phpMyAdminissa vasemmalta luomasi tietokanta ja tuo
+     (välilehti "Tuo" / "Import", merkistö `utf-8`) repon tiedostot
+     järjestyksessä `db/01-schema.sql`, `db/02-texts-fi.sql` ja
+     `db/03-texts-en.sql`. Ne eivät ole
+     `dist/`:ssä, koska niitä ei ladata web-palvelimelle.
+   - **Jokaisessa julkaisussa** aja `db/02-texts-fi.sql` ja
+     `db/03-texts-en.sql` uudelleen samalla tavalla. Se ei haittaa, vaikka
+     rivit ovat jo kannassa: puuttuvat tekstit lisätään ja muuttuneet (esim.
+     korjatut kirjoitusvirheet) päivitetään tiedoston mukaisiksi. Muita
+     tekstejä eikä kielten käyttöönottoa se ei muuta.
+
+4. **Anna asetukset** jommallakummalla tavalla:
 
    **a) `config.php` (tavallisin web-hotellissa).** Luo tiedosto
    `/home/käyttäjä/config.php` (samaan kansioon, jossa `public_html` näkyy)
@@ -249,6 +318,10 @@ saatavilla selaimesta.
        'digitransit_api_key' => 'oma-avaimesi',
        'digitransit_endpoint' => 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/',
        'allowed_origin' => 'https://oma-domain.fi',
+       'db_host' => 'localhost',
+       'db_name' => 'tietokannan-nimi',
+       'db_user' => 'kayttajatunnus',
+       'db_password' => 'salasana',
    ];
    ```
 
@@ -263,6 +336,7 @@ saatavilla selaimesta.
    - `DIGITRANSIT_API_KEY` = avain
    - `DIGITRANSIT_ENDPOINT` = GraphQL-rajapinnan URL
    - `ALLOWED_ORIGIN` = sivustosi osoite, esim. `https://oma-domain.fi`
+   - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` = tietokannan tiedot
 
    Jos molemmat on annettu, ympäristömuuttuja voittaa `config.php`:n arvon.
 
@@ -271,12 +345,14 @@ saatavilla selaimesta.
    kauttaviivaa loppuun, ja `www.` vain jos sivusto oikeasti avataan sen
    kautta.
 
-4. **Tarkista, että suojaus toimii:**
+5. **Tarkista, että suojaus toimii:**
 
    ```
    https://oma-domain.fi/                        → sovellus toimii, lähdöt latautuvat
+   https://oma-domain.fi/api/texts.php           → JSON, jossa "lang": "fi" ja "texts" (tietokanta toimii)
    https://oma-domain.fi/api/digitransit.php     → 405 "Method Not Allowed" (proxy toimii, avain ei näy)
    https://oma-domain.fi/api/config.example.php  → 403 (.htaccess toimii)
+   https://oma-domain.fi/api/config-loader.php   → 403 (.htaccess toimii)
    https://oma-domain.fi/api/config.php          → 403 tai 404, ei koskaan tiedoston sisältöä
    ```
 
@@ -291,9 +367,59 @@ saatavilla selaimesta.
 
 Sovellusta ei tarvitse kääntää uudelleen.
 
+## Tekstit ja kielet
+
+Käyttöliittymän tekstit ovat MySQL-tietokannassa, ja selain hakee ne
+`/api/texts.php`:stä ennen sovelluksen näyttämistä. Ylläpitoliittymää ei ole:
+suomenkieliset tekstit ylläpidetään tiedostossa `db/02-texts-fi.sql`, joka
+ajetaan kantaan phpMyAdminilla (ks. [Julkaisu](#julkaisu-web-hotellille)).
+**Tiedosto voittaa:** ajo päivittää kannan tekstit tiedoston mukaisiksi.
+Pikakorjauksen voi tehdä suoraan kantaan, mutta tee sama korjaus myös
+tiedostoon — muuten seuraava ajo kumoaa sen. Muutos näkyy sovelluksessa
+seuraavalla sivulatauksella.
+
+| Taulu | Sisältö |
+| ----- | ------- |
+| `ui_language` | Kielet: koodi (`fi`), nimi, `locale` (kellonajat ja päivämäärät) ja `enabled`. |
+| `ui_text_key` | Jokainen tekstiavain kerran: ryhmä (`text_group`, näkymä kuten `app` tai yhteinen `common`), avain (`text_key`) ja selite (`note`). |
+| `ui_text` | Tekstit kielittäin: `lang` + `text_group` + `text_key` → `value`. |
+
+- **Paikanpitimet** `{0}`, `{1}`, … korvataan sovelluksessa luvuilla, teksteillä
+  tai linkeillä. Mitä kuhunkin tulee, kerrotaan `ui_text_key.note`-sarakkeessa.
+  Linkkien osoitteet ovat koodissa, tietokannassa on vain linkin teksti.
+- **Kielet:** suomi (oletus, `db/02-texts-fi.sql`) ja englanti
+  (`db/03-texts-en.sql`). Kun käytössä on useampi kieli, otsikkoriville tulee
+  kielivalinta (kielikoodit vierekkäin, FI | EN). Käyttäjän oma valinta
+  tallennetaan selaimeen (`paikallis.lang.v1`). Kielen saa piilotettua
+  asettamalla `ui_language`-taulussa sen `enabled`-arvoksi 0; jos käytössä on
+  vain yksi kieli, kielivalintaa ei näytetä.
+- **Uusi kieli** lisätään riveinä, ilman koodimuutoksia: rivi `ui_language`-tauluun
+  (`enabled = 0` käännöstyön ajaksi) ja käännökset `ui_text`-tauluun, esim.
+  omaan tiedostoon `db/04-texts-sv.sql` (mallina `03-texts-en.sql`). Puuttuva
+  käännös näytetään suomeksi.
+
+  ```sql
+  INSERT INTO ui_language (code, name, locale, sort_order, enabled) VALUES ('sv', 'Svenska', 'sv-SE', 3, 0);
+  INSERT INTO ui_text (lang, text_group, text_key, value) VALUES ('sv', 'app', 'tab.map', 'Karta');
+  ```
+
+- **Merkistö:** taulut ja yhteys ovat `utf8mb4`. phpMyAdmin (web-hotellissa
+  tai Dockerissa <http://localhost:8081>) käyttää sitä automaattisesti. Komentorivin `mysql`-asiakas voi käyttää `latin1`:tä
+  (esim. Docker-containerissa), jolloin ääkköset tallentuvat väärin — käytä
+  `mysql --default-character-set=utf8mb4` tai aloita `SET NAMES utf8mb4;`.
+- **Kehittäjälle:** uusi teksti lisätään tiedostoon `db/02-texts-fi.sql`
+  (`ui_text_key` + `ui_text`), käännös tiedostoon `db/03-texts-en.sql` ja
+  koodiin `t('ryhmä.avain')`. Kirjoitusvirhe
+  korjataan samaan riviin — erillisiä UPDATE-lauseita ei tarvita. Tiedostosta
+  poistettu rivi jää kantaan haitattomana; sen voi poistaa `DELETE`-lauseella.
+  Dockerin kantaan muutokset saa ajamalla tiedoston uudelleen tai nollaamalla
+  kannan (`docker compose down -v`).
+
 ## Vianetsintä
 
-Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
+Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa. Jos
+käyttöliittymän tekstejä ei saada tietokannasta, koko sivulla näkyy
+vikailmoitus "Palvelu ei ole juuri nyt käytettävissä" ja sen alla tarkempi syy.
 
 | Virhe | Todennäköinen syy |
 | ----- | ----------------- |
@@ -302,6 +428,13 @@ Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
 | `HTTP 401` | Avain on väärä tai tilaus ei ole voimassa. Tarkista avain Digitransit-portaalista. |
 | Devissä `Unexpected token '<'` / `is not valid JSON` | `.env`:stä puuttuu `DIGITRANSIT_ENDPOINT`, jolloin Vite ei luo proxya ja palauttaa `digitransit.php`:n lähdekoodin JSONin sijaan. Käynnistä `npm run dev` uudelleen `.env`:n muokkauksen jälkeen. |
 | `HTTP 502: Upstream-virhe` | Palvelin ei saa yhteyttä Digitransitiin: väärä `DIGITRANSIT_ENDPOINT`, hostingin palomuuri tai Digitransitin katko. |
+| "Palvelu ei ole juuri nyt käytettävissä" + `HTTP 503: Tietokantaan ei saada yhteyttä.` | `texts.php` ei saa yhteyttä MySQL:ään: väärä `DB_HOST`/`DB_NAME`/`DB_USER`/`DB_PASSWORD` tai tietokanta on alhaalla. Tarkka syy on PHP:n virhelokissa. Dockerissa: onko `db`-container käynnissä (`docker compose ps`)? Jos muutit `.env`:n `DB_*`-arvoja, nollaa kanta (`docker compose down -v`). |
+| `HTTP 500: Palvelimelta puuttuu DB_HOST, DB_NAME tai DB_USER` | Tietokanta-asetuksia ei ole ympäristömuuttujissa eikä `config.php`:ssä. |
+| `HTTP 500: Palvelimen PHP:stä puuttuu pdo_mysql-laajennus.` | Ota `pdo_mysql` käyttöön hostingin PHP-asetuksista. Dockerissa: `docker compose up --build`. |
+| `HTTP 500: Tekstien haku tietokannasta epäonnistui` | Taulut puuttuvat: tuo `db/01-schema.sql`, `db/02-texts-fi.sql` ja `db/03-texts-en.sql`. |
+| Devissä "Palvelu ei ole juuri nyt käytettävissä" + `HTTP 404` tai `HTTP 500` | Vite ohjaa `/api/texts.php`:n Dockeriin (`localhost:8080`). Käynnistä `docker compose up --build -d` — myös vanha, ilman `--build`-valitsinta käynnistetty container voi puuttua `texts.php`:n. |
+| Sovelluksessa näkyy avaimia, esim. `stopCard.remove` | Tekstiä ei ole tietokannassa. Aja uusimmat `db/02-texts-fi.sql` ja `db/03-texts-en.sql` (phpMyAdmin). Dockerissa `up --build` ei päivitä kantaa — ks. [Docker-osion](#web-hotelli-simulaatio-docker) komento. |
+| Ääkköset näkyvät muodossa `Ã¤` | Teksti on tallennettu väärällä merkistöllä (esim. komentorivin `mysql` ilman `--default-character-set=utf8mb4`). Korjaa teksti phpMyAdminilla. |
 | Jaettu linkki: `Vuoroa ei löytynyt tälle päivälle.` | Vuoro ei liikennöi linkin päivänä, tai vuorojen tunnisteet ovat vaihtuneet aikataulukauden vaihtuessa. Linkki on tarkoitettu saman päivän käyttöön. |
 
 ## Tekninen yhteenveto
@@ -324,10 +457,17 @@ Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
 - Dev-tilassa (`npm run dev` ja `npm run preview`) Vite-server proxyttää
   `/api/digitransit.php`-kutsut suoraan Digitransitiin ja injektoi avaimen
   `.env`-tiedostosta.
+- **Käyttöliittymän tekstit** tulevat MySQL:stä `/api/texts.php`:n kautta
+  (PDO, `utf8mb4`, ETag-välimuisti). `TextProvider` (`src/i18n/texts.jsx`)
+  hakee ne ennen sovelluksen renderöintiä, ja komponentit käyttävät niitä
+  `useText()`-hookilla: `t('app.subtitle', [6])`; kellonaikojen ja päivämäärien
+  muotoilu käyttää `useLanguage().locale`-arvoa. Ainoa kovakoodattu teksti on
+  vikailmoitus, joka näytetään suomeksi ja englanniksi, jos tietokanta ei
+  vastaa. Devissä Vite ohjaa `/api/texts.php`:n Docker-containerille.
 - Tila pidetään `useState`/`useLocalStorage`-hookkien kanssa, ei reduxia.
 - Lähdöt päivitetään `setInterval`-ajastimella 30 s välein
   (`useDepartures`-hook), avoin vuoronäkymä 30 s välein (`useTrip`) ja
-  häiriötiedotteet 60 s välein (`useAlerts`). Kaikki pysähtyvät
+  häiriötiedotteet 60 s välein valitulla kielellä (`useAlerts`). Kaikki pysähtyvät
   `visibilitychange`-tapahtumaan, kun välilehti on piilossa.
 - Vuoron pysäkkiajat haetaan tietylle palvelupäivälle
   (`trip.onServiceDate(date:)`), koska sama vuorotunniste ajetaan joka päivä.
@@ -335,7 +475,7 @@ Virheilmoitus näkyy pysäkkikortissa tai häiriötiedotepaneelissa.
   `/?trip=tampere:…&date=YYYY-MM-DD&from=tampere:…&to=tampere:…` ja osoittaa
   `index.html`:ään, joten web-hotelliin ei tarvita uudelleenohjaussääntöjä.
 - **Docker**: `Dockerfile` (multi-stage: node-build → php-apache) ja
-  `docker-compose.yml` simuloivat web-hotelli-ympäristöä.
+  `docker-compose.yml` (web + MySQL) simuloivat web-hotelli-ympäristöä.
 
 ## Tekijä
 

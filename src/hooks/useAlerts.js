@@ -5,33 +5,37 @@ import { getAlerts } from '../api/digitransit.js'
  * Hakee Tampereen häiriötiedotteet ja päivittää annetulla intervallilla.
  * Polling pysäytetään kun välilehti ei ole näkyvissä (Page Visibility API)
  * ja jatketaan kun välilehti palaa näkyviin. Tiedotteet muuttuvat harvoin,
- * joten oletusväli on pidempi kuin lähdöillä.
+ * joten oletusväli on pidempi kuin lähdöillä. Kielen vaihtuessa tiedotteet
+ * haetaan heti uudelleen.
  *
+ * @param {string} lang - käyttöliittymän kieli (useLanguage().lang)
  * @param {number} intervalMs
  */
-export function useAlerts(intervalMs = 60_000) {
+export function useAlerts(lang, intervalMs = 60_000) {
   const [alerts, setAlerts] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const timerRef = useRef(null)
   const cancelledRef = useRef(false)
+  const requestRef = useRef(0) // vain uusin haku päivittää tilan (kielen vaihto kesken haun)
 
   const fetchNow = useCallback(async () => {
+    const request = ++requestRef.current
     setLoading(true)
     try {
-      const result = await getAlerts()
-      if (cancelledRef.current) return
+      const result = await getAlerts(lang)
+      if (cancelledRef.current || request !== requestRef.current) return
       setAlerts(result)
       setError(null)
       setLastUpdated(new Date())
     } catch (e) {
-      if (cancelledRef.current) return
+      if (cancelledRef.current || request !== requestRef.current) return
       setError(e)
     } finally {
-      if (!cancelledRef.current) setLoading(false)
+      if (!cancelledRef.current && request === requestRef.current) setLoading(false)
     }
-  }, [])
+  }, [lang])
 
   useEffect(() => {
     cancelledRef.current = false

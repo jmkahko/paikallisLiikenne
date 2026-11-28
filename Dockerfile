@@ -6,8 +6,8 @@
 #   2) php:8.2-apache ajaa Apache + PHP 8 ja tarjoilee dist/-kansion sisällön
 #      DocumentRoot:sta /var/www/html (vastaa `public_html`-juurta).
 #
-# API-avainta ei tarvita build-vaiheessa: PHP-proxy lukee sen runtimessa
-# ympäristömuuttujasta DIGITRANSIT_API_KEY.
+# API-avainta ja tietokanta-asetuksia ei tarvita build-vaiheessa: PHP lukee
+# ne runtimessa ympäristömuuttujista (DIGITRANSIT_API_KEY, DB_* …).
 
 # ---------------------------------------------------------------------------
 # 1) Build stage
@@ -37,10 +37,14 @@ RUN a2enmod rewrite \
 </Directory>\n' > /etc/apache2/conf-available/allow-htaccess.conf \
  && a2enconf allow-htaccess
 
+# PDO:n MySQL-ajuri api/texts.php:lle (käyttöliittymän tekstit tietokannasta).
+# Web-hotelleissa se on yleensä valmiina, php:8.2-apache-imagessa ei.
+RUN docker-php-ext-install pdo_mysql
+
 # Apachen oletus PHP-FPM/mod_php välittää getenv():lle vain SetEnv-arvot,
 # joten julkaistaan kontaineriin tulevat env-muuttujat PHP:lle.
-# (Tämä mahdollistaa DIGITRANSIT_API_KEY:n lukemisen getenv():llä.)
-RUN printf 'PassEnv DIGITRANSIT_API_KEY\nPassEnv ALLOWED_ORIGIN\nPassEnv DIGITRANSIT_ENDPOINT\n' \
+# (Tämä mahdollistaa DIGITRANSIT_API_KEY:n ja DB_*-asetusten lukemisen getenv():llä.)
+RUN printf 'PassEnv DIGITRANSIT_API_KEY\nPassEnv ALLOWED_ORIGIN\nPassEnv DIGITRANSIT_ENDPOINT\nPassEnv DB_HOST\nPassEnv DB_NAME\nPassEnv DB_USER\nPassEnv DB_PASSWORD\n' \
     > /etc/apache2/conf-available/passenv.conf \
  && a2enconf passenv
 

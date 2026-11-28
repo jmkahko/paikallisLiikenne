@@ -1,8 +1,9 @@
-# Estä config.php:n ja sen mallin suora lataus selaimella.
+# Estä config.php:n, sen mallin ja asetusten latausapurin (config-loader.php)
+# suora lataus selaimella.
 # Apache 2.4+ käyttää Require-direktiiviä; vanhat 2.2 / LiteSpeed -ympäristöt
 # nojaavat Order/Deny-direktiiveihin — pidetään molemmat yhteensopivuuden
 # vuoksi.
-<FilesMatch "^config(\.example)?\.php$">
+<FilesMatch "^config(\.example|-loader)?\.php$">
     Require all denied
 
     Order allow,deny

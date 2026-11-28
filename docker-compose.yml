@@ -1,13 +1,18 @@
-# Web-hotelli-simulaatio: Apache 2.4 + PHP 8
+# Web-hotelli-simulaatio: Apache 2.4 + PHP 8 + MySQL 8 + phpMyAdmin
 #
 # Käynnistys:   docker compose up --build
 # Sammutus:     docker compose down
 # Sovellus:     http://localhost:8080
+# phpMyAdmin:   http://localhost:8081 (DB_USER / DB_PASSWORD)
 #
 # Ympäristömuuttujat luetaan .env-tiedostosta ja välitetään containerin
-# RUNTIME-ympäristömuuttujiksi. PHP-proxy (api/digitransit.php) lukee ne
-# getenv():llä. Arvot eivät päädy imagen kerroksiin.
+# RUNTIME-ympäristömuuttujiksi. PHP (api/digitransit.php ja api/texts.php)
+# lukee ne getenv():llä. Arvot eivät päädy imagen kerroksiin.
 # Täytä .env ennen käynnistystä (ks. .env.example).
+#
+# Tietokanta: MySQL ajaa db/-kansion SQL-tiedostot (skeema + tekstit) vain
+# ensimmäisellä käynnistyksellä, kun db-data-volume on tyhjä. Jos muutat
+# db/*.sql-tiedostoja, nollaa kanta: docker compose down -v
 
 services:
   web:
@@ -22,4 +27,40 @@ services:
       DIGITRANSIT_API_KEY: ${DIGITRANSIT_API_KEY:-}
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-}
       DIGITRANSIT_ENDPOINT: ${DIGITRANSIT_ENDPOINT:-}
+      DB_HOST: db                              # alla olevan db-palvelun nimi
+      DB_NAME: ${DB_NAME:-}
+      DB_USER: ${DB_USER:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+    depends_on:
+      - db
     restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    container_name: paikallis-liikenne-db
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-}
+      MYSQL_USER: ${DB_USER:-}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"        # root-tunnusta ei tarvita
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro    # 01-schema.sql, 02-texts-fi.sql …
+      - db-data:/var/lib/mysql
+    restart: unless-stopped
+
+  # phpMyAdmin kuten web-hotellissa: tekstien muokkaus ja SQL-tiedostojen tuonti.
+  # http://localhost:8081, kirjautuminen .env:n DB_USER / DB_PASSWORD -tunnuksilla.
+  # Portti on sidottu 127.0.0.1:een, jotta se ei näy lähiverkkoon.
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: paikallis-liikenne-pma
+    ports:
+      - "127.0.0.1:8081:80"
+    environment:
+      PMA_HOST: db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db-data:

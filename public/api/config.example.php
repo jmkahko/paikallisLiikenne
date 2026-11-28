@@ -13,8 +13,9 @@
  * `config.php` on `.gitignore`:ssa eikä saa päätyä git-versionhallintaan.
  *
  * Vaihtoehtoinen tapa (suositeltu Dockerille tai modernille hostingille):
- * aseta ympäristömuuttujat DIGITRANSIT_API_KEY, DIGITRANSIT_ENDPOINT ja
- * ALLOWED_ORIGIN palvelimelle. Ympäristömuuttuja voittaa config.php:n arvon.
+ * aseta ympäristömuuttujat DIGITRANSIT_API_KEY, DIGITRANSIT_ENDPOINT,
+ * ALLOWED_ORIGIN, DB_HOST, DB_NAME, DB_USER ja DB_PASSWORD palvelimelle.
+ * Ympäristömuuttuja voittaa config.php:n arvon.
  */
 return [
     'digitransit_api_key' => 'aseta-oikea-avain-tahan',
@@ -28,4 +29,13 @@ return [
     // Digitransitin GraphQL-rajapinnan osoite (Waltti/Tampere).
     // Muuta vain jos käytät eri endpointtia.
     'digitransit_endpoint' => 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/',
+
+    // MySQL-tietokanta käyttöliittymän teksteille (api/texts.php).
+    // Luo tietokanta ja käyttäjä hostingin hallintapaneelissa ja tuo
+    // db/01-schema.sql ja db/02-texts-fi.sql phpMyAdminilla. Käyttäjälle
+    // riittää SELECT-oikeus. Palvelin on web-hotellissa yleensä 'localhost'.
+    'db_host'     => 'localhost',
+    'db_name'     => 'aseta-tietokannan-nimi',
+    'db_user'     => 'aseta-kayttajatunnus',
+    'db_password' => 'aseta-salasana',
 ];

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getStopsByBbox } from '../api/digitransit.js'
-import { OSM_TILE_URL, OSM_TILE_ATTRIBUTION, ICONS, modeClass } from './mapShared.js'
+import { OSM_TILE_URL, osmAttribution, ICONS, modeClass } from './mapShared.js'
+import { useText } from '../i18n/texts.jsx'
 
 // Tampereen keskusta (Keskustori). Kartta avautuu tähän.
 const TAMPERE_CENTER = [61.4978, 23.761]
@@ -15,6 +16,7 @@ const FETCH_DEBOUNCE_MS = 400
 // Karttatason sisäkomponentti: kuuntelee kartan liikkeitä ja hakee pysäkit
 // näkyvälle alueelle. Pitää oltava MapContainerin sisällä (käyttää karttaa).
 function StopsLayer({ onSelect, selectedStopIds, isFull, onTooFarChange }) {
+  const t = useText()
   const [stops, setStops] = useState([])
   const timerRef = useRef(null)
 
@@ -73,7 +75,7 @@ function StopsLayer({ onSelect, selectedStopIds, isFull, onTooFarChange }) {
                 map.closePopup()
               }}
             >
-              {added ? 'Jo lisätty' : isFull ? 'Lista täynnä' : 'Lisää pysäkki'}
+              {t(added ? 'stopMap.added' : isFull ? 'stopMap.full' : 'stopMap.add')}
             </button>
           </div>
         </Popup>
@@ -83,12 +85,14 @@ function StopsLayer({ onSelect, selectedStopIds, isFull, onTooFarChange }) {
 }
 
 export default function StopMap({ onSelect, selectedStopIds, isFull }) {
+  const t = useText()
   const [tooFar, setTooFar] = useState(false)
+  const attribution = osmAttribution(t('common.osmContributors'))
 
   return (
     <div className="stop-map-panel">
       {tooFar && (
-        <p className="stop-map__hint">Zoomaa lähemmäs nähdäksesi pysäkit.</p>
+        <p className="stop-map__hint">{t('stopMap.zoomHint')}</p>
       )}
       <MapContainer
         center={TAMPERE_CENTER}
@@ -96,7 +100,8 @@ export default function StopMap({ onSelect, selectedStopIds, isFull }) {
         className="stop-map"
         scrollWheelZoom
       >
-        <TileLayer attribution={OSM_TILE_ATTRIBUTION} url={OSM_TILE_URL} />
+        {/* key: attribuutio päivittyy vain luomalla taso uudelleen (kielen vaihto) */}
+        <TileLayer key={attribution} attribution={attribution} url={OSM_TILE_URL} />
         <StopsLayer
           onSelect={onSelect}
           selectedStopIds={selectedStopIds}

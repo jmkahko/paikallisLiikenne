@@ -16,7 +16,15 @@ export default defineConfig(({ mode }) => {
   // Proxy-asetukset tarvitaan vain dev-tilassa (npm run dev).
   // Build-vaiheessa (npm run build / Docker) proxya ei käytetä,
   // joten puuttuva endpoint ei ole ongelma.
-  const proxyConfig = {}
+  // Käyttöliittymän tekstit tulevat MySQL:stä, jota Vite ei osaa lukea.
+  // /api/texts.php ohjataan siksi Docker-containerin oikealle PHP:lle
+  // (docker compose up, portti 8080 docker-compose.yml:stä).
+  const proxyConfig = {
+    '/api/texts.php': {
+      target: 'http://localhost:8080',
+      changeOrigin: true
+    }
+  }
   if (endpoint) {
     const endpointUrl = new URL(endpoint)
     proxyConfig['/api/digitransit.php'] = {

@@ -13,6 +13,7 @@ declare(strict_types=1);           // Pakotetaan tiukat tyypit (int on int, stri
  *   2) `config.php` (perinteinen web-hotelli — luodaan käsin palvelimelle),
  *      ensin web-rootin yläpuolelta (`public_html/../config.php`, suositeltu)
  *      ja sitten tämän tiedoston kansiosta (`public_html/api/config.php`).
+ * Haku tehdään yhteisessä `config-loader.php`:ssä (myös texts.php käyttää sitä).
  */
 
 // Kerrotaan selaimelle, että vastaus on aina JSON-muotoista (UTF-8-merkistöllä)
@@ -32,28 +33,13 @@ if ($method !== 'POST' && $method !== 'OPTIONS') {
 
 // --- VAIHE 1b: Lataa asetukset (env-muuttujat + config.php fallback) --------
 
-// Ladataan config.php kerran — käytetään fallbackina kaikille asetuksille.
-// Etsitään kahdesta paikasta, ensimmäinen kelvollinen voittaa:
-$configCandidates = [
-    dirname(__DIR__, 2) . '/config.php',   // Web-rootin yläpuoli (suositeltu): public_html/api → /home/käyttäjä/
-    __DIR__ . '/config.php',               // __DIR__ = tämän tiedoston kansio (eli public_html/api/)
-];
-$fileConfig = [];                          // Tyhjä taulukko oletuksena
-foreach ($configCandidates as $configFile) {
-    // @ vaimentaa open_basedir-varoituksen, jos hosting ei salli web-rootin yläpuolta
-    if (@is_file($configFile)) {           // Tarkistetaan onko tiedosto olemassa
-        $loaded = require $configFile;     // Ladataan tiedosto — sen pitää palauttaa (return) array
-        if (is_array($loaded)) {
-            $fileConfig = $loaded;
-            break;                         // Käytetään ensimmäistä kelvollista (array palauttavaa)
-        }
-    }
-}
+// setting() etsii arvon ensin env-muuttujasta, sitten config.php:stä
+// (web-rootin yläpuolelta tai tämän tiedoston kansiosta)
+require __DIR__ . '/config-loader.php';
 
-// Luetaan asetukset: ensin env-muuttuja, sitten config.php fallback
-$apiKey        = (string) (getenv('DIGITRANSIT_API_KEY') ?: ($fileConfig['digitransit_api_key'] ?? ''));
-$allowedOrigin = (string) (getenv('ALLOWED_ORIGIN')      ?: ($fileConfig['allowed_origin']      ?? ''));
-$endpoint      = (string) (getenv('DIGITRANSIT_ENDPOINT') ?: ($fileConfig['digitransit_endpoint'] ?? ''));
+$apiKey        = setting('DIGITRANSIT_API_KEY', 'digitransit_api_key');
+$allowedOrigin = setting('ALLOWED_ORIGIN', 'allowed_origin');
+$endpoint      = setting('DIGITRANSIT_ENDPOINT', 'digitransit_endpoint');
 
 // --- VAIHE 1c: CORS — salli pyynnöt vain sallitusta osoitteesta -------------
 

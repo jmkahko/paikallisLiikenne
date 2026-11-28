@@ -1,31 +1,28 @@
 import { useEffect, useState } from 'react'
 import { useDepartures } from '../hooks/useDepartures.js'
 import TripModal from './TripModal.jsx'
+import { useLanguage, useText } from '../i18n/texts.jsx'
 
-const MODE_LABEL = {
-  BUS: 'Bussi',
-  TRAM: 'Raitiovaunu',
-  RAIL: 'Juna',
-  FERRY: 'Lautta',
-  SUBWAY: 'Metro'
-}
+// Kulkumuodot, joille on teksti tietokannassa (common.mode.*).
+const MODES = ['bus', 'tram', 'rail', 'ferry', 'subway']
 
-function formatRelative(date, now) {
+function formatRelative(date, now, t) {
   const diffMs = date.getTime() - now.getTime()
   const minutes = Math.round(diffMs / 60000)
-  if (minutes <= 0) return 'nyt'
-  if (minutes === 1) return '1 min'
-  if (minutes < 60) return `${minutes} min`
+  if (minutes <= 0) return t('stopCard.now')
+  if (minutes < 60) return t('stopCard.minutes', [minutes])
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  return m === 0 ? `${h} t` : `${h} t ${m} min`
+  return m === 0 ? t('stopCard.hours', [h]) : t('stopCard.hoursMinutes', [h, m])
 }
 
-function formatClock(date) {
-  return date.toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })
+function formatClock(date, locale) {
+  return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function StopCard({ stop, departureCount = 5, onRemove, onMove, isFirst, isLast }) {
+  const t = useText()
+  const { locale } = useLanguage()
   const { data, error, loading, lastUpdated, refresh } = useDepartures(
     stop.gtfsId,
     30_000,
@@ -42,6 +39,7 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
 
   const departures = data?.departures ?? []
   const mode = (data?.stop?.vehicleMode || stop.vehicleMode || 'BUS').toUpperCase()
+  const modeKey = mode.toLowerCase()
 
   return (
     <>
@@ -53,7 +51,7 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
             <h2 className="stop-card__name">{stop.name}</h2>
             <p className="stop-card__meta">
               {stop.code && <span>#{stop.code}</span>}
-              <span>{MODE_LABEL[mode] || mode}</span>
+              <span>{MODES.includes(modeKey) ? t(`common.mode.${modeKey}`) : mode}</span>
             </p>
           </div>
         </div>
@@ -63,8 +61,8 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
             className="icon-btn"
             onClick={() => onMove(-1)}
             disabled={isFirst}
-            title="Siirrä ylös"
-            aria-label="Siirrä ylös"
+            title={t('stopCard.moveUp')}
+            aria-label={t('stopCard.moveUp')}
           >
             ↑
           </button>
@@ -73,8 +71,8 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
             className="icon-btn"
             onClick={() => onMove(1)}
             disabled={isLast}
-            title="Siirrä alas"
-            aria-label="Siirrä alas"
+            title={t('stopCard.moveDown')}
+            aria-label={t('stopCard.moveDown')}
           >
             ↓
           </button>
@@ -82,8 +80,8 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
             type="button"
             className="icon-btn"
             onClick={refresh}
-            title="Päivitä"
-            aria-label="Päivitä"
+            title={t('stopCard.refresh')}
+            aria-label={t('stopCard.refresh')}
           >
             ↻
           </button>
@@ -91,8 +89,8 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
             type="button"
             className="icon-btn icon-btn--danger"
             onClick={onRemove}
-            title="Poista pysäkki"
-            aria-label="Poista pysäkki"
+            title={t('stopCard.remove')}
+            aria-label={t('stopCard.remove')}
           >
             ✕
           </button>
@@ -102,11 +100,11 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
       <div className="stop-card__body">
         {error && (
           <p className="stop-card__error">
-            Virhe: {error.message || String(error)}
+            {t('common.error', [error.message || String(error)])}
           </p>
         )}
         {!error && departures.length === 0 && !loading && (
-          <p className="stop-card__empty">Ei tulevia lähtöjä lähitunteina.</p>
+          <p className="stop-card__empty">{t('stopCard.empty')}</p>
         )}
         {departures.length > 0 && (
           <ul className="departures">
@@ -119,10 +117,10 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
                   </span>
                   <span className="departure__headsign">{headsign}</span>
                   <span className="departure__times">
-                    <span className="departure__rel">{formatRelative(d.time, now)}</span>
+                    <span className="departure__rel">{formatRelative(d.time, now, t)}</span>
                     <span className="departure__clock">
-                      {formatClock(d.time)}
-                      {d.realtime && <span className="rt-dot" title="Reaaliaikainen" />}
+                      {formatClock(d.time, locale)}
+                      {d.realtime && <span className="rt-dot" title={t('common.realtime')} />}
                     </span>
                   </span>
                 </>
@@ -142,7 +140,7 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
                           mode: d.mode
                         })
                       }
-                      title="Näytä reitti ja aikataulu"
+                      title={t('stopCard.showTrip')}
                     >
                       {inner}
                     </button>
@@ -157,10 +155,10 @@ export default function StopCard({ stop, departureCount = 5, onRemove, onMove, i
       </div>
 
       <footer className="stop-card__footer">
-        {loading && <span className="stop-card__loading">Päivitetään…</span>}
+        {loading && <span className="stop-card__loading">{t('stopCard.updating')}</span>}
         {!loading && lastUpdated && (
           <span className="stop-card__updated">
-            Päivitetty {formatClock(lastUpdated)}
+            {t('stopCard.updated', [formatClock(lastUpdated, locale)])}
           </span>
         )}
       </footer>
