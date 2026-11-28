@@ -10,8 +10,9 @@ reaaliaikaisia bussi- ja raitiovaunulähtöjä. Käyttäjä voi lisätä enintä
 6 pysäkkiä, jotka tallennetaan selaimen `localStorage`:een. Tiedot haetaan
 Digitransit GraphQL-rajapinnasta (Waltti / Tampere) **palvelinpuolen
 PHP-proxyn kautta**, jotta API-avain ei päädy selainbundleen.
+Käyttöliittymän tekstit haetaan **MySQL-tietokannasta** (`/api/texts.php`).
 
-Tuotanto-kohteena on tavallinen PHP-tukeva web-hotelli.
+Tuotanto-kohteena on tavallinen PHP- ja MySQL-tukeva web-hotelli.
 Paikallisesti voi simuloida hostingia Dockerissa (`docker compose up`).
 
 ## Tekniikat
@@ -40,10 +41,19 @@ Paikallisesti voi simuloida hostingia Dockerissa (`docker compose up`).
 - **localStorage** pysäkkivalintojen tallennukseen (`useLocalStorage`-hook).
 - **Page Visibility API** (`visibilitychange`) pollingin pysäyttämiseen
   kun välilehti on piilossa.
-- **Docker** (multi-stage: `node:20-alpine`-build → `php:8.2-apache`-runtime)
+- **Docker** (multi-stage: `node:20-alpine`-build → `php:8.2-apache`-runtime,
+  `pdo_mysql` asennettuna, sekä erilliset palvelut `db` (`mysql:8.4`) ja
+  `phpmyadmin` (`phpmyadmin:5.2`, vain `127.0.0.1:8081`))
   simuloi web-hotelliympäristöä paikallisesti. Ympäristömuuttujat
   välitetään runtime-enveinä (`environment:` docker-composessa, arvot
   `.env`-tiedostosta), ei build-argeina.
+- **MySQL** käyttöliittymän teksteille (`public/api/texts.php`, PDO,
+  `utf8mb4`). Taulut `ui_language`, `ui_text_key`, `ui_text` (`db/*.sql`).
+  Kielet ovat rivejä, eivät sarakkeita. Komponentit hakevat tekstit
+  `useText()`-hookilla: `t('ryhmä.avain', [arvo0, arvo1])`, jossa `{0}`, `{1}`
+  korvataan arvoilla (luku, teksti tai React-elementti, esim. linkki).
+  Puuttuva käännös → suomi; puuttuva avain → avain näkyy sellaisenaan.
+  Ilman tietokantaa sovellus näyttää vain vikailmoituksen (`TextProvider`).
 - Ei TypeScriptiä. Ei testikirjastoa. Ei lintteriä konfiguroituna.
 
 Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä —
@@ -61,25 +71,34 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
 ├── docker-compose.yml       # `docker compose up` käynnistys
 ├── .dockerignore            # node_modules, dist, .env, config.php pois imageen
 ├── .gitignore               # .env*, config.php (sekä juuressa että public/api/), dist
+├── db/
+│   ├── 01-schema.sql        # Taulut ui_language, ui_text_key, ui_text (utf8mb4) + kielet fi/en
+│   ├── 02-texts-fi.sql      # Suomenkieliset tekstit + avainten selitteet; tiedosto voittaa (uudelleenajo päivittää kannan)
+│   └── 03-texts-en.sql      # Englanninkieliset käännökset; tiedosto voittaa kuten 02
 ├── README.md                # Käyttäjäohjeet (asennus, API-avain, julkaisu, vianetsintä)
 ├── CHANGELOG.md             # Muutosloki (Keep a Changelog), kanoninen versiohistoria
 ├── CLAUDE.md                # Tämä tiedosto
 ├── public/
 │   └── api/
 │       ├── digitransit.php      # Tuotannon PHP-proxy
+│       ├── texts.php            # Käyttöliittymän tekstit MySQL:stä (GET ?lang=fi, ETag)
+│       ├── config-loader.php    # setting(): env-muuttuja tai config.php (yhteinen molemmille)
 │       ├── config.example.php   # Malli; käyttäjä luo config.php web-rootin yläpuolelle
-│       └── .htaccess            # Estää config.php:n ja mallin latauksen (Apache 2.2 + 2.4)
+│       └── .htaccess            # Estää config.php:n, config-loaderin ja mallin latauksen (Apache 2.2 + 2.4)
 └── src/
     ├── main.jsx             # React-juuren bootstrap
     ├── App.jsx              # Sovelluksen päärakenne, tila, layout
     ├── styles.css           # Kaikki tyylit (CSS-muuttujat juuressa)
     ├── changelog.js         # Versiotiedot About-modaaliin (versio, julkaisupäivä, CHANGELOG-linkki)
     ├── api/
-    │   └── digitransit.js   # GraphQL-kutsut omaan /api/digitransit.php:hen
+    │   ├── digitransit.js   # GraphQL-kutsut omaan /api/digitransit.php:hen
+    │   └── texts.js         # Käyttöliittymän tekstit omasta /api/texts.php:stä
+    ├── i18n/
+    │   └── texts.jsx        # TextProvider (lataus/vikailmoitus, kielen valinta), useText(), useLanguage(), formatText({0}, {1}…)
     ├── hooks/
     │   ├── useLocalStorage.js   # Yleinen localStorage-hook
     │   ├── useDepartures.js     # Pollaa pysäkin lähtöjä, näkyvyystietoinen
-    │   ├── useAlerts.js         # Pollaa häiriötiedotteita (60 s), näkyvyystietoinen
+    │   ├── useAlerts.js         # Pollaa häiriötiedotteita (60 s) valitulla kielellä, näkyvyystietoinen
     │   ├── useStopRoutes.js     # Hakee valittujen pysäkkien reitit (tiedotekohdistus)
     │   └── useTrip.js           # Pollaa vuoron reittiä ja pysäkkiaikoja (30 s), näkyvyystietoinen
     └── components/
@@ -94,6 +113,7 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
         ├── mapShared.js       # Jaetut karttatyökalut (OSM-laatat, divIcon-ikonit)
         ├── StopCard.jsx       # Yhden pysäkin kortti + lähdöt
         ├── Alerts.jsx         # Häiriötiedotteet: avattava paneeli + "kaikki"-modaali
+        ├── LanguageSwitch.jsx # Kielivalinta FI | EN otsikkorivillä (näkyy, kun käytössä on useampi kieli)
         ├── PrivacyBanner.jsx  # Tietosuojailmoitus (localStorage-tieto)
         └── About.jsx          # About-modale (tiedot, lisenssi, vastuuvapautus)
 ```
@@ -108,8 +128,10 @@ Riippuvuudet näkyvät `package.json`:ssa. Pidä riippuvuusmäärä minimissä �
     ├── assets/
     └── api/
         ├── digitransit.php      ← PHP-proxy
+        ├── texts.php            ← tekstit MySQL:stä
+        ├── config-loader.php    ← asetusten luku
         ├── config.example.php   ← malli
-        └── .htaccess            ← estää config.php:n ja mallin latauksen
+        └── .htaccess            ← estää config.php:n, config-loaderin ja mallin latauksen
 ```
 
 Vaihtoehtoisesti `config.php` voi olla `public_html/api/`-kansiossa, jos
@@ -119,13 +141,15 @@ hosting ei salli tiedostoja web-rootin yläpuolella.
 
 ```bash
 npm install        # asenna riippuvuudet
-npm run dev        # dev-palvelin http://localhost:5173 (Vite-proxy hoitaa /api)
+npm run dev        # dev-palvelin http://localhost:5173 (Vite-proxy hoitaa /api;
+                   # tekstit Dockerista → `docker compose up -d` oltava käynnissä)
 npm run build      # tuotantokäännös → dist/ (sis. dist/api/digitransit.php)
 npm run preview    # esikatselu http://localhost:4173 — /api Vite-proxyn kautta, EI aja PHP:tä
 
 # Web-hotelli-simulaatio (Apache + PHP 8):
-docker compose up --build   # http://localhost:8080
+docker compose up --build   # http://localhost:8080, phpMyAdmin http://localhost:8081
 docker compose down         # sammuta
+docker compose down -v      # sammuta ja nollaa MySQL (db/*.sql ajetaan uudelleen)
 ```
 
 **Dev:** Asetukset syötetään tiedostoon `.env` (EI `VITE_`-prefixiä →
@@ -138,6 +162,8 @@ ei selainbundleen). Vite-dev-palvelin lukee ne `loadEnv`:llä.
 | `DIGITRANSIT_API_KEY` | Kyllä | Digitransit-rajapinnan subscription key |
 | `ALLOWED_ORIGIN` | Tuotannossa kyllä | Sallittu origin (esim. `http://localhost:8080`). Tyhjä = tarkistus pois. Dev (Vite-proxy) ei käytä. |
 | `DIGITRANSIT_ENDPOINT` | Kyllä | GraphQL-endpointin URL (esim. `https://api.digitransit.fi/routing/v2/waltti/gtfs/v1/`). Devissä ilman tätä Vite ei luo proxya. |
+| `DB_HOST` | Kyllä (ei `.env`:ssä) | MySQL-palvelin. Dockerissa kiinteästi `db` (`docker-compose.yml`), web-hotellissa yleensä `localhost`. |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Kyllä | Tekstitietokanta. Docker luo kannan ja käyttäjän näillä ensimmäisellä käynnistyksellä. Tuotannossa käyttäjälle riittää SELECT. |
 
 **Tuotanto (Docker):** `.env`-arvot annetaan containerille `environment:`-
 kentän kautta `docker-compose.yml`:ssa. Apache lukee ne `PassEnv`:llä ja
@@ -155,11 +181,26 @@ ovat kaikki gitignoroituja.
 
 ## Konventiot
 
-- Käyttöliittymäteksti **suomeksi** (myös virheilmoitukset ja tooltipit).
+- Käyttöliittymäteksti on tietokannassa (myös virheilmoitukset ja tooltipit);
+  pääkieli **suomi**, englanti käännöksenä.
 - Tiedosto- ja muuttujanimet **englanniksi** (`stop`, `departures`).
 - Tila päämäärässään lähimmässä järkevässä paikassa: globaalia storea ei ole.
   `App.jsx` omistaa pysäkkilistan, `StopCard` hoitaa oman pysäkkinsä haut.
-- Verkkokutsut keskitettävä `src/api/digitransit.js`:ään. Älä tee `fetch`:iä
+- **Käyttöliittymätekstejä ei kovakoodata**: lisää ne `db/02-texts-fi.sql`:ään
+  (`ui_text_key` + `ui_text`, paikanpitimet selitetään `note`-sarakkeessa) ja
+  käytä koodissa `t('ryhmä.avain')`. Tiedosto on suomen tekstien virallinen
+  lähde: korjaus tehdään suoraan riviin (ei erillisiä UPDATE-lauseita), ja
+  uudelleenajo (`ON DUPLICATE KEY UPDATE … VALUES()`) päivittää kannan.
+  Ryhmä on näkymä (`app`, `stopCard`, `trip`…) tai yhteinen `common`. Linkkien osoitteet pysyvät koodissa,
+  vain linkkiteksti on kannassa. Ainoa poikkeus on `TextProvider`in
+  vikailmoitus (fi + en), koska se näytetään juuri kun kanta ei vastaa.
+  Lisää uudelle tekstille käännös myös `db/03-texts-en.sql`:ään (muuten
+  englanniksi näkyy suomi). Kellonajat ja päivämäärät muotoillaan
+  `useLanguage().locale`-arvolla — älä kovakoodaa `'fi-FI'`:tä. Tiedostot,
+  jotka eivät ole komponentteja (esim. `tripLink.js`), saavat `t`:n ja
+  `locale`n parametreina.
+- Verkkokutsut keskitettävä `src/api/`-kansioon (`digitransit.js`,
+  `texts.js`). Älä tee `fetch`:iä
   komponenteista suoraan.
 - Selain kutsuu Digitransit-tietoja varten **vain** omaa
   `/api/digitransit.php`-proxya, ei koskaan Digitransitia suoraan. Tämä koskee
@@ -183,19 +224,21 @@ Tämä on tärkein osa: pidä nämä tiedostot synkassa.
 | Uusi npm-riippuvuus tai version nosto | `package.json`, `package-lock.json` (auto), README-kohta "Tekninen yhteenveto" jos relevantti |
 | Uusi ympäristömuuttuja | `.env.example`, README:n "Asennus"- ja "Julkaisu"-osiot, `docker-compose.yml` (`environment:`), `Dockerfile` (jos lisättävä `PassEnv`). **Älä koskaan lisää avaimia `VITE_`-prefixillä** — paljastuu selaimeen. |
 | Uusi käyttäjälle näkyvä toiminto | README:n "Ominaisuudet"-lista; tarvittaessa "Pysäkkien lisääminen" |
-| Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto", `About.jsx` (mainitsee 30 s) |
-| Selain ottaa yhteyttä uuteen ulkoiseen palveluun (laatat, fontit, CDN…) | Tietosuojatekstit: `PrivacyBanner.jsx`, `About.jsx` ja README:n "Tietosuoja ja tietoturva" |
+| Polling-välin tai näkyvyyslogiikan muutos | README:n "Ominaisuudet" + "Tekninen yhteenveto", teksti `about.data.source` (mainitsee 30 s) `db/02-texts-fi.sql`:ssä ja `db/03-texts-en.sql`:ssä |
+| Selain ottaa yhteyttä uuteen ulkoiseen palveluun (laatat, fontit, CDN…) | Tietosuojatekstit `privacy.text` ja `about.privacy.*` (`db/02-texts-fi.sql`, `db/03-texts-en.sql`) ja README:n "Tietosuoja ja tietoturva" |
 | Proxyyn uusi virheilmoitus tai asetus | README:n "Vianetsintä"-taulukko |
 | Uusi komponentti tai tiedosto | Tämän CLAUDE.md:n "Hakemistorakenne" |
-| About-sivu tai modal-sisältö muuttuu | `src/components/About.jsx` (sisältö), `src/styles.css` (modal-tyylit), README:n "Ominaisuudet" jos relevantti |
+| About-sivu tai modal-sisältö muuttuu | Tekstit `about.*` (`db/02-texts-fi.sql`, `db/03-texts-en.sql`), rakenne ja linkit `src/components/About.jsx`, `src/styles.css` (modal-tyylit), README:n "Ominaisuudet" jos relevantti |
 | Uusi julkaisu / versionnosto | `CHANGELOG.md` (kanoninen muutosloki), `src/changelog.js` (`APP_VERSION` + `APP_RELEASE_DATE`), `package.json` `version`. Pidä versionumero samana kaikissa kolmessa ja luo vastaava git-tagi (`vX.Y`). |
 | Digitransit-päätepisteen URL muuttuu | `.env` (`DIGITRANSIT_ENDPOINT`), `config.example.php`. Ei kovakoodattu PHP:ssä, Vitessä tai docker-composessa. |
 | Selainpuolen ENDPOINT muuttuu | `src/api/digitransit.js` (`ENDPOINT`-vakio), `vite.config.js`-proxy-polun avain ja PHP-tiedoston sijainti (`public/api/digitransit.php`) pysyvät synkassa. |
 | PHP-proxy lisää uusia kenttiä/headeria | Päivitä sekä `public/api/digitransit.php` **että** `vite.config.js`:n dev-proxy `headers`. |
 | Maksimi pysäkkimäärä muuttuu | `App.jsx` (`MAX_STOPS`), README, tämä taulukko |
-| `localStorage`-avaimen rikkova muutos | Nosta avaimen versionumeroa (esim. `paikallis.stops.v1` → `v2`). Avaimet: `paikallis.stops.v1` ja `paikallis.departureCount.v1` (`App.jsx`: `STORAGE_KEY`, `DEPARTURE_COUNT_KEY`), `paikallis.privacy.v1` (`PrivacyBanner.jsx`: `PRIVACY_KEY`). Mainitse README:ssä. |
+| `localStorage`-avaimen rikkova muutos | Nosta avaimen versionumeroa (esim. `paikallis.stops.v1` → `v2`). Avaimet: `paikallis.stops.v1` ja `paikallis.departureCount.v1` (`App.jsx`: `STORAGE_KEY`, `DEPARTURE_COUNT_KEY`), `paikallis.privacy.v1` (`PrivacyBanner.jsx`: `PRIVACY_KEY`), `paikallis.lang.v1` (`src/i18n/texts.jsx`: `LANG_KEY`, raakamerkkijono, tallennetaan vain käyttäjän valitessa kielen). Mainitse README:ssä. |
 | Uusi npm-skripti `package.json`:iin | README:n komennot, tämän tiedoston "Yleiset komennot" |
 | Tyylimuutokset `:root`-muuttujiin | `src/styles.css` molemmat lohkot (tumma + light-media) |
+| Uusi tai muuttuva käyttöliittymäteksti | `db/02-texts-fi.sql` (avain `ui_text_key` + teksti `ui_text`, `note` paikanpitimille), käännös `db/03-texts-en.sql`, koodissa `t('ryhmä.avain')`. Ei kovakoodattuja tekstejä. Web-hotellin kantaan ajo mainitaan julkaisussa. |
+| Tietokantaskeema muuttuu | `db/01-schema.sql` (`CREATE TABLE IF NOT EXISTS`), README "Julkaisu"-osio (miten olemassa olevaa kantaa päivitetään), `texts.php` |
 | Uusi tiedosto `public/api/`:in | `.htaccess`-suojaus tarvittaessa, README "Julkaisu"-osio jos käyttäjän pitää tehdä jotain palvelimella |
 | Docker-imageen tarvittava lisätyökalu | `Dockerfile` (apt-get install) **ja** README "Web-hotelli-simulaatio (Docker)" -osio |
 
@@ -248,8 +291,20 @@ Git-haarat poistetaan mergen jälkeen (squash-PR, `--delete-branch`).
   palvelimella web-rootin yläpuolelle (`/home/käyttäjä/config.php`).
 - **Docker getenv()**: Apache+PHP ei oletuksena välitä container-tason
   env-muuttujia PHP-prosessille. `Dockerfile`:ssa on `PassEnv`-direktiivit
-  (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`, `DIGITRANSIT_ENDPOINT`) jotka
+  (`DIGITRANSIT_API_KEY`, `ALLOWED_ORIGIN`, `DIGITRANSIT_ENDPOINT`, `DB_*`) jotka
   mahdollistavat tämän. Jos lisäät uusia env-muuttujia, päivitä myös tuo lista.
+- **MySQL init vain kerran**: Docker ajaa `db/*.sql`:t vain, kun
+  `db-data`-volume on tyhjä; `up --build` ei päivitä tekstejä, vaan uudet
+  näkyvät avaimina. Aja tiedostot uudelleen (README:n Docker-osion
+  `for f in db/0*.sql …` -komento tai phpMyAdmin) tai `docker compose down -v`.
+- **Ääkköset MySQL:ssä**: SQL-tiedostot alkavat `SET NAMES utf8mb4;` ja
+  PDO-yhteydessä on `charset=utf8mb4`. Muokkaa mieluiten phpMyAdminilla
+  (localhost:8081). Containerin `mysql`-komentorivi käyttää
+  oletuksena `latin1`:tä — käytä `--default-character-set=utf8mb4`, muuten
+  ääkköset tallentuvat kahdesti koodattuina (`Ã¤`).
+- **Dev tarvitsee Dockerin**: `npm run dev`/`preview` ohjaa
+  `/api/texts.php`:n `localhost:8080`:aan. Vanha, ennen tätä muutosta rakennettu
+  container antaa 404 → `docker compose up --build`.
 - **Suluiden tasapaino**: ilman lintteriä JSX-virheet huomataan vasta
   käännöksessä. Aja `npm run build` ennen committia.
 

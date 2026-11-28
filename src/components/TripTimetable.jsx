@@ -1,4 +1,5 @@
 import { formatClock } from './tripProgress.js'
+import { useLanguage, useText } from '../i18n/texts.jsx'
 
 // Poikkeama aikataulusta minuutteina ("+2 min" / "−1 min"), null jos ajallaan.
 function delayText(actual, scheduled) {
@@ -14,12 +15,11 @@ function delayText(actual, scheduled) {
  * näytetään lähtöaika, muilta saapumisaika.
  */
 export default function TripTimetable({ stops, now, fromIdx, toIdx, onSelectTo }) {
+  const t = useText()
+  const { locale } = useLanguage()
   return (
     <div className="trip-timetable">
-      <p className="trip-timetable__hint">
-        Valitse pysäkki, jolla jäät pois — saapumisaika näkyy yllä ja pysäkki tulee
-        mukaan jaettavaan linkkiin.
-      </p>
+      <p className="trip-timetable__hint">{t('trip.timetable.hint')}</p>
       <ol className="trip-timetable__list">
         {stops.map((s, idx) => {
           const isFrom = idx === fromIdx
@@ -44,19 +44,25 @@ export default function TripTimetable({ stops, now, fromIdx, toIdx, onSelectTo }
                 disabled={!selectable}
                 aria-pressed={isTo}
                 onClick={() => onSelectTo(isTo ? null : s.gtfsId)}
-                title={isTo ? 'Poista valinta' : selectable ? 'Jään pois tällä pysäkillä' : undefined}
+                title={
+                  isTo
+                    ? t('trip.timetable.unselect')
+                    : selectable
+                      ? t('trip.timetable.selectTo')
+                      : undefined
+                }
               >
                 <span className="trip-stop__time">
-                  {time ? formatClock(time) : '–'}
-                  {s.realtime && <span className="rt-dot" title="Reaaliaikainen" />}
+                  {time ? formatClock(time, locale) : '–'}
+                  {s.realtime && <span className="rt-dot" title={t('common.realtime')} />}
                 </span>
                 <span className="trip-stop__name">
                   {s.name}
                   {s.code && <span className="trip-stop__code">#{s.code}</span>}
                 </span>
                 {delay && <span className="trip-stop__delay">{delay}</span>}
-                {isFrom && <span className="trip-stop__role">Nousu</span>}
-                {isTo && <span className="trip-stop__role">Pois</span>}
+                {isFrom && <span className="trip-stop__role">{t('trip.timetable.boarding')}</span>}
+                {isTo && <span className="trip-stop__role">{t('trip.timetable.alighting')}</span>}
               </button>
             </li>
           )

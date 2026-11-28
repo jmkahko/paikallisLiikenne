@@ -442,6 +442,63 @@ a {
   color: var(--text-dim);
 }
 
+/* Tekstien lataus ja vikailmoitus ennen sovellusta (TextProvider) */
+.app-status {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.app-status__title {
+  margin-bottom: 0.25rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.app-status__title + p {
+  margin-top: 0;
+}
+
+.app-status__btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.app-status__detail {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+}
+
+/* Latausrinkula vasta hetken päästä, ettei nopea lataus välähdä. */
+.app-status--loading::after {
+  content: '';
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: app-status-spin 0.9s linear infinite, app-status-show 0s 0.4s forwards;
+}
+
+@keyframes app-status-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes app-status-show {
+  to { opacity: 1; }
+}
+
 .stop-grid {
   margin-top: 1.5rem;
   display: grid;
@@ -949,6 +1006,44 @@ a {
   color: var(--accent);
 }
 
+.app__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Kielivalinta FI | EN, valittu lihavoituna (näkyy vain, kun tietokannassa
+   on useampi käytössä oleva kieli) */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+
+.lang-switch__btn {
+  padding: 0.2rem 0.55rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.lang-switch__btn + .lang-switch__btn {
+  border-left: 1px solid var(--border);
+}
+
+.lang-switch__btn:hover {
+  color: var(--text);
+}
+
+.lang-switch__btn--active {
+  color: var(--text);
+  font-weight: 700;
+}
+
 /* ---- Pysäkkien valinta kartalta (StopMap, inline välilehti) ---- */
 .stop-map-panel {
   display: flex;
@@ -1339,7 +1434,7 @@ a {
     flex-direction: column;
     align-items: stretch;
   }
-  .app__about-btn {
+  .app__header-actions {
     align-self: flex-start;
   }
   .stop-card__name {

@@ -6,6 +6,7 @@ import TripShare from './TripShare.jsx'
 import { modeClass } from './mapShared.js'
 import { computeTripProgress, findLegIndexes, formatClock } from './tripProgress.js'
 import { buildTripLink, tripShareText } from './tripLink.js'
+import { useLanguage, useText } from '../i18n/texts.jsx'
 
 /**
  * Yksittäisen vuoron näkymä (issuet #9 ja #24): yhteenveto (lähtö / perillä),
@@ -26,6 +27,8 @@ export default function TripModal({
   mode,
   onClose
 }) {
+  const t = useText()
+  const { locale } = useLanguage()
   const { data, error, loaded } = useTrip(tripId, date)
   const [toId, setToId] = useState(initialToId)
   const [tab, setTab] = useState('map') // 'map' | 'timetable'
@@ -39,7 +42,7 @@ export default function TripModal({
   const endStop = toIdx >= 0 ? stops[toIdx] : stops[stops.length - 1] || null
 
   const route = data?.routeShortName || routeShortName || '?'
-  const title = data?.headsign || headsign || 'Vuoro'
+  const title = data?.headsign || headsign || t('trip.defaultTitle')
   const tripMode = data?.mode || mode
   const cls = modeClass(tripMode)
 
@@ -54,7 +57,9 @@ export default function TripModal({
     headsign: title,
     mode: tripMode,
     from: fromStop,
-    to: toIdx >= 0 ? endStop : null
+    to: toIdx >= 0 ? endStop : null,
+    t,
+    locale
   })
 
   return (
@@ -65,17 +70,17 @@ export default function TripModal({
             <span className={`route-badge route-${cls}`}>{route}</span>
             <span className="trip-map__headsign">{title}</span>
           </h2>
-          <button className="modal__close" onClick={onClose} aria-label="Sulje">
+          <button className="modal__close" onClick={onClose} aria-label={t('common.close')}>
             ✕
           </button>
         </div>
         <div className="modal__content modal__content--map">
-          {!loaded && <p className="trip-map__msg">Ladataan reittiä…</p>}
+          {!loaded && <p className="trip-map__msg">{t('trip.loading')}</p>}
           {loaded && !data && (
             <p className="trip-map__msg">
               {error
-                ? `Reitin lataus epäonnistui: ${error.message || String(error)}`
-                : 'Vuoroa ei löytynyt tälle päivälle. Linkki voi olla vanhentunut.'}
+                ? t('trip.loadError', [error.message || String(error)])
+                : t('trip.notFound')}
             </p>
           )}
           {data && (
@@ -84,19 +89,24 @@ export default function TripModal({
                 <div className="trip-summary__times">
                   {fromStop?.departure && (
                     <span>
-                      Lähtö <strong>{fromStop.name}</strong> klo {formatClock(fromStop.departure)}
+                      {t('trip.summary.departure', [
+                        <strong>{fromStop.name}</strong>,
+                        formatClock(fromStop.departure, locale)
+                      ])}
                     </span>
                   )}
                   {endStop?.arrival && (
                     <span>
-                      {toIdx >= 0 ? 'Perillä' : 'Päätepysäkillä'} <strong>{endStop.name}</strong>{' '}
-                      klo {formatClock(endStop.arrival)}
+                      {t(toIdx >= 0 ? 'trip.summary.arrival' : 'trip.summary.terminus', [
+                        <strong>{endStop.name}</strong>,
+                        formatClock(endStop.arrival, locale)
+                      ])}
                     </span>
                   )}
                 </div>
                 <TripShare url={link} text={shareText} />
               </div>
-              <div className="controls__tabs trip-modal__tabs" role="tablist" aria-label="Vuoron näkymä">
+              <div className="controls__tabs trip-modal__tabs" role="tablist" aria-label={t('trip.tabsLabel')}>
                 <button
                   type="button"
                   role="tab"
@@ -104,7 +114,7 @@ export default function TripModal({
                   className={`controls__tab${tab === 'map' ? ' controls__tab--active' : ''}`}
                   onClick={() => setTab('map')}
                 >
-                  <span aria-hidden="true">🗺️</span> Kartta
+                  <span aria-hidden="true">🗺️</span> {t('trip.tab.map')}
                 </button>
                 <button
                   type="button"
@@ -113,7 +123,7 @@ export default function TripModal({
                   className={`controls__tab${tab === 'timetable' ? ' controls__tab--active' : ''}`}
                   onClick={() => setTab('timetable')}
                 >
-                  <span aria-hidden="true">🕒</span> Aikataulu
+                  <span aria-hidden="true">🕒</span> {t('trip.tab.timetable')}
                 </button>
               </div>
               {tab === 'map' ? (

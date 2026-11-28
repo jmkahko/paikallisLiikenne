@@ -183,16 +183,16 @@ const STOP_DEPARTURES_QUERY = /* GraphQL */ `
 // Häiriötiedotteet rajataan Tampereen feediin palvelinpuolella. Tiedotteet
 // kytkeytyvät pysäkkeihin (entities) — Tampereella route on yleensä tyhjä.
 const ALERTS_QUERY = /* GraphQL */ `
-  query Alerts {
+  query Alerts($lang: String) {
     alerts(feeds: ["${TAMPERE_FEED}"]) {
       id
       alertSeverityLevel
       alertEffect
       effectiveStartDate
       effectiveEndDate
-      alertHeaderText(language: "fi")
-      alertDescriptionText(language: "fi")
-      alertUrl(language: "fi")
+      alertHeaderText(language: $lang)
+      alertDescriptionText(language: $lang)
+      alertUrl(language: $lang)
       route { shortName }
       stop { gtfsId }
       entities {
@@ -386,11 +386,13 @@ export async function getStopDepartures(stopId, numberOfDepartures = 5) {
 }
 
 /**
- * Hae Tampereen häiriötiedotteet (kaikki).
+ * Hae Tampereen häiriötiedotteet (kaikki) käyttöliittymän kielellä. Jos
+ * tiedotteelle ei ole käännöstä, Digitransit palauttaa sen suomeksi.
+ * @param {string} lang - esim. 'fi', 'en'
  * @returns {Promise<Array>} normalisoidut tiedotteet
  */
-export async function getAlerts() {
-  const data = await gqlFetch(ALERTS_QUERY)
+export async function getAlerts(lang = 'fi') {
+  const data = await gqlFetch(ALERTS_QUERY, { lang })
   return (data.alerts || []).map(normalizeAlert)
 }
 

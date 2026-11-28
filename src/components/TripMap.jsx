@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
   OSM_TILE_URL,
-  OSM_TILE_ATTRIBUTION,
+  osmAttribution,
   ICONS,
   ICONS_PASSED,
   SELECTED_ICON,
@@ -13,13 +13,14 @@ import {
   modeClass
 } from './mapShared.js'
 import { formatClock } from './tripProgress.js'
+import { useLanguage, useText } from '../i18n/texts.jsx'
 
 // Viivan värit vastaavat CSS-muuttujia --bus / --tram (Leaflet ei lue CSS-muuttujia).
 const LINE_COLORS = { bus: '#2e86de', tram: '#e74c3c' }
 
-const STATUS_TEXT = {
-  before: 'Vuoro ei ole vielä lähtenyt lähtöpysäkiltä — näytetään suunniteltu reitti.',
-  done: 'Vuoro on jo päättynyt.'
+const STATUS_KEY = {
+  before: 'trip.map.before',
+  done: 'trip.map.done'
 }
 
 // Ruutukulma kahden pisteen välille (➤ osoittaa oikealle, ruudun y alaspäin).
@@ -41,8 +42,11 @@ function buildArrows(geometry) {
  * Tiedot ja eteneminen tulevat TripModalista; tämä vain piirtää.
  */
 export default function TripMap({ geometry, stops, progress, mode, fromIdx, toIdx }) {
+  const t = useText()
+  const { locale } = useLanguage()
+
   if (geometry.length === 0) {
-    return <p className="trip-map__msg">Reittitietoa ei ole saatavilla tälle vuorolle.</p>
+    return <p className="trip-map__msg">{t('trip.map.noRoute')}</p>
   }
 
   const cls = modeClass(mode)
@@ -50,6 +54,7 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
   const lastStop = stops.length - 1
   const arrows = buildArrows(geometry)
   const vehEmoji = cls === 'tram' ? '🚊' : '🚌'
+  const attribution = osmAttribution(t('common.osmContributors'))
 
   function stopIcon(s, idx) {
     if (idx === fromIdx || idx === toIdx) return SELECTED_ICON
@@ -58,10 +63,10 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
     return progress.passedIds.has(s.gtfsId) ? ICONS_PASSED[cls] : ICONS[cls]
   }
   function stopRole(idx) {
-    if (idx === fromIdx) return 'Nousupysäkki'
-    if (idx === toIdx) return 'Jääpoispysäkki'
-    if (idx === 0) return 'Lähtö'
-    if (idx === lastStop) return 'Määränpää'
+    if (idx === fromIdx) return t('trip.map.role.from')
+    if (idx === toIdx) return t('trip.map.role.to')
+    if (idx === 0) return t('trip.map.role.origin')
+    if (idx === lastStop) return t('trip.map.role.destination')
     return null
   }
 
@@ -71,17 +76,19 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
         {progress.state === 'enroute' ? (
           <>
             <span className="trip-map__legend-item">
-              <span className="legend-veh">{vehEmoji}</span> Arvioitu sijainti
+              <span className="legend-veh">{vehEmoji}</span> {t('trip.map.legend.position')}
             </span>
             <span className="trip-map__legend-item">
-              <span className="legend-line" style={{ background: color }} /> Edessä
+              <span className="legend-line" style={{ background: color }} />{' '}
+              {t('trip.map.legend.ahead')}
             </span>
             <span className="trip-map__legend-item">
-              <span className="legend-line legend-line--dashed" style={{ color }} /> Ajettu
+              <span className="legend-line legend-line--dashed" style={{ color }} />{' '}
+              {t('trip.map.legend.traveled')}
             </span>
           </>
         ) : (
-          <span className="trip-map__legend-note">{STATUS_TEXT[progress.state]}</span>
+          <span className="trip-map__legend-note">{t(STATUS_KEY[progress.state])}</span>
         )}
       </div>
       <MapContainer
@@ -90,7 +97,8 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
         className="trip-map"
         scrollWheelZoom
       >
-        <TileLayer attribution={OSM_TILE_ATTRIBUTION} url={OSM_TILE_URL} />
+        {/* key: attribuutio päivittyy vain luomalla taso uudelleen (kielen vaihto) */}
+        <TileLayer key={attribution} attribution={attribution} url={OSM_TILE_URL} />
         {progress.traveled.length > 1 && (
           <Polyline
             positions={progress.traveled}
@@ -111,12 +119,14 @@ export default function TripMap({ geometry, stops, progress, mode, fromIdx, toId
             <Popup>
               <div className="stop-popup">
                 <strong className="stop-popup__name">
-                  {cls === 'tram' ? 'Raitiovaunun' : 'Bussin'} arvioitu sijainti
+                  {t(cls === 'tram' ? 'trip.map.vehicle.tram' : 'trip.map.vehicle.bus')}
                 </strong>
                 {progress.fromStop && progress.fromStop.departure && (
                   <span className="stop-popup__code">
-                    Lähtenyt pysäkiltä {progress.fromStop.name} klo{' '}
-                    {formatClock(progress.fromStop.departure)}
+                    {t('trip.map.departedFrom', [
+                      progress.fromStop.name,
+                      formatClock(progress.fromStop.departure, locale)
+                    ])}
                   </span>
                 )}
               </div>

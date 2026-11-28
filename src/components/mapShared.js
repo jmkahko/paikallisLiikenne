@@ -3,8 +3,14 @@ import L from 'leaflet'
 // Jaetut karttatyökalut StopMap- ja TripMap-komponenteille.
 // OpenStreetMapin julkiset laatat (ei API-avainta) — attribuutio pakollinen.
 export const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-export const OSM_TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> -tekijät'
+const OSM_LINK = '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+
+// Leaflet näyttää attribuution HTML:nä, joten tietokannasta tuleva teksti
+// (t('common.osmContributors'), esim. "-tekijät") escapetaan.
+export function osmAttribution(contributors) {
+  const safe = String(contributors).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)
+  return `&copy; ${OSM_LINK} ${safe}`
+}
 
 export function modeClass(mode) {
   return (mode || 'BUS').toLowerCase() === 'tram' ? 'tram' : 'bus'

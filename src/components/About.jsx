@@ -1,6 +1,17 @@
 import { APP_VERSION, APP_RELEASE_DATE, CHANGELOG_URL, REPO_URL } from '../changelog'
+import { useText } from '../i18n/texts.jsx'
+
+// Ulkoinen linkki tekstin keskelle (osoite koodissa, teksti tietokannasta).
+function Link({ href, children }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="modal__link-inline">
+      {children}
+    </a>
+  )
+}
 
 export default function About({ isOpen, onClose }) {
+  const t = useText()
   if (!isOpen) return null
 
   return (
@@ -8,13 +19,13 @@ export default function About({ isOpen, onClose }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
           <h2>
-            Tietoja sovelluksesta{' '}
+            {t('about.title')}{' '}
             <span className="modal__version">v{APP_VERSION}</span>
           </h2>
           <button
             className="modal__close"
             onClick={onClose}
-            aria-label="Sulje"
+            aria-label={t('common.close')}
           >
             ✕
           </button>
@@ -22,84 +33,41 @@ export default function About({ isOpen, onClose }) {
 
         <div className="modal__content">
           <section className="modal__section">
-            <h3>Tietosuoja</h3>
+            <h3>{t('about.privacy.title')}</h3>
+            <p>{t('about.privacy.storage', [<code>localStorage</code>])}</p>
+            <p>{t('about.privacy.server')}</p>
             <p>
-              Tämä sovellus tallentaa valitsemasi pysäkit, näytettävien
-              lähtöjen määrän ja tietosuojailmoituksen kuittauksen selaimen
-              paikalliseen tallennustilaan (<code>localStorage</code>).
-              Valintoja ei tallenneta palvelimelle. Evästeitä tai analytiikkaa
-              ei käytetä.
+              {t('about.privacy.osm', [
+                <Link href="https://osmfoundation.org/wiki/Privacy_Policy">
+                  {t('about.privacy.osmLink')}
+                </Link>
+              ])}
             </p>
             <p>
-              Pysäkki- ja aikataulutiedot haetaan Digitransit-rajapinnasta
-              tämän sivuston oman palvelimen kautta, joten Digitransit ei näe
-              IP-osoitettasi. Sivustoa palveleva web-palvelin tallentaa
-              tavanomaiset palvelinlokit (mm. IP-osoite, ajankohta ja pyydetty
-              osoite).
-            </p>
-            <p>
-              Kun avaat kartan (Kartta-välilehti tai vuoron reitti),
-              karttakuvat ladataan suoraan OpenStreetMap Foundationin
-              palvelimelta. Se näkee tällöin IP-osoitteesi, selaimesi ja
-              käyttöjärjestelmäsi tiedot, sivuston osoitteen sekä katsotun
-              kartta-alueen. Ilman kartan avaamista OpenStreetMapiin ei oteta
-              yhteyttä. Katso{' '}
-              <a
-                href="https://osmfoundation.org/wiki/Privacy_Policy"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                OpenStreetMap Foundationin tietosuojakäytäntö
-              </a>
-              .
-            </p>
-            <p>
-              Ylläpitäjä: kahkonen.dev. Yhteydenotot{' '}
-              <a
-                href={`${REPO_URL}/issues`}
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                GitHubin Issues-sivun
-              </a>{' '}
-              kautta.
+              {t('about.privacy.contact', [
+                <Link href={`${REPO_URL}/issues`}>{t('about.privacy.contactLink')}</Link>
+              ])}
             </p>
           </section>
 
           <section className="modal__section">
-            <h3>Reaaliaikainen data</h3>
+            <h3>{t('about.data.title')}</h3>
             <p>
-              Kaikki bussi- ja raitiovaunujen lähtötiedot haetaan{' '}
-              <a
-                href="https://digitransit.fi/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                Digitransit-rajapinnan
-              </a>{' '}
-              kautta ja päivitetään 30 sekunnin välein. Sovellus tai sen
-              kehittäjät eivät ole vastuussa tietojen oikeellisuudesta,
-              ajantasaisuudesta tai käytöstä johtuneista vahingoista.
+              {t('about.data.source', [
+                <Link href="https://digitransit.fi/">{t('about.data.sourceLink')}</Link>
+              ])}
             </p>
             <p>
-              Kartalla näkyvä bussin tai raitiovaunun sijainti on{' '}
-              <strong>pelkkä arvio aikataulun perusteella</strong> (miltä
-              pysäkiltä vuoro on viimeksi lähtenyt ja milloin). Se{' '}
-              <strong>ei perustu GPS-paikannukseen</strong>, eikä sitä tule
-              käyttää luotettavana tietona bussin tai raitiovaunun todellisesta
-              sijainnista.
+              {t('about.data.position', [
+                <strong>{t('about.data.positionEstimate')}</strong>,
+                <strong>{t('about.data.positionNoGps')}</strong>
+              ])}
             </p>
           </section>
 
           <section className="modal__section">
-            <h3>Lähdekoodi</h3>
-            <p>
-              Sovellus on avoimen lähdekoodin projekti. Voit katsoa koodin
-              GitHubissa:
-            </p>
+            <h3>{t('about.source.title')}</h3>
+            <p>{t('about.source.text')}</p>
             <a
               href="https://github.com/jmkahko/paikallisLiikenne"
               target="_blank"
@@ -111,10 +79,9 @@ export default function About({ isOpen, onClose }) {
           </section>
 
           <section className="modal__section">
-            <h3>Versio</h3>
+            <h3>{t('about.version.title')}</h3>
             <p>
-              Käytössä <strong>v{APP_VERSION}</strong> (julkaistu{' '}
-              {APP_RELEASE_DATE}).
+              {t('about.version.text', [<strong>v{APP_VERSION}</strong>, APP_RELEASE_DATE])}
             </p>
             <a
               href={CHANGELOG_URL}
@@ -122,82 +89,40 @@ export default function About({ isOpen, onClose }) {
               rel="noreferrer"
               className="modal__link"
             >
-              Katso versiohistoria →
+              {t('about.version.history')}
             </a>
           </section>
 
           <section className="modal__section">
-            <h3>Lisenssit ja tiedot</h3>
+            <h3>{t('about.licenses.title')}</h3>
             <p>
-              <strong>Sovellus:</strong> © kahkonen.dev, avoimen lähdekoodin
-              projekti.
+              <strong>{t('about.licenses.appLabel')}</strong> {t('about.licenses.app')}
             </p>
             <p>
-              <strong>Tiedot:</strong> © <a
-                href="https://digitransit.fi/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                Digitransit
-              </a>{' '}
+              <strong>{t('about.licenses.dataLabel')}</strong> ©{' '}
+              <Link href="https://digitransit.fi/">Digitransit</Link>{' '}
               {new Date().getFullYear()},{' '}
-              <a
-                href="https://creativecommons.org/licenses/by/4.0/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                CC BY 4.0
-              </a>
+              <Link href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</Link>
             </p>
             <p>
-              Katso{' '}
-              <a
-                href="https://digitransit.fi/en/developers/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                Digitransit Terms of Use
-              </a>
-              .
+              {t('about.licenses.terms', [
+                <Link href="https://digitransit.fi/en/developers/">Digitransit Terms of Use</Link>
+              ])}
             </p>
             <p>
-              <strong>Kartta:</strong> © <a
-                href="https://www.openstreetmap.org/copyright"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                OpenStreetMap
-              </a>{' '}
-              -tekijät, lisenssi{' '}
-              <a
-                href="https://opendatacommons.org/licenses/odbl/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                ODbL
-              </a>
-              . Karttakirjasto{' '}
-              <a
-                href="https://leafletjs.com/"
-                target="_blank"
-                rel="noreferrer"
-                className="modal__link-inline"
-              >
-                Leaflet
-              </a>
-              .
+              <strong>{t('about.licenses.mapLabel')}</strong>{' '}
+              {t('about.licenses.map', [
+                <Link href="https://www.openstreetmap.org/copyright">OpenStreetMap</Link>,
+                <Link href="https://opendatacommons.org/licenses/odbl/">ODbL</Link>,
+                <Link href="https://leafletjs.com/">Leaflet</Link>
+              ])}
             </p>
           </section>
         </div>
 
         <div className="modal__footer">
           <button className="modal__btn-close" onClick={onClose}>
-            Sulje
+            {t('common.close')}
           </button>
         </div>
       </div>

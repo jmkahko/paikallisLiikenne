@@ -6,10 +6,12 @@ import PrivacyBanner from './components/PrivacyBanner.jsx'
 import About from './components/About.jsx'
 import Alerts from './components/Alerts.jsx'
 import TripModal from './components/TripModal.jsx'
+import LanguageSwitch from './components/LanguageSwitch.jsx'
 import { parseTripLink, clearTripLink } from './components/tripLink.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { useAlerts } from './hooks/useAlerts.js'
 import { useStopRoutes } from './hooks/useStopRoutes.js'
+import { useLanguage, useText } from './i18n/texts.jsx'
 
 const MAX_STOPS = 6
 const STORAGE_KEY = 'paikallis.stops.v1'
@@ -18,6 +20,8 @@ const DEFAULT_DEPARTURE_COUNT = 5
 const DEPARTURE_COUNT_OPTIONS = [1, 2, 3, 4, 5]
 
 export default function App() {
+  const t = useText()
+  const { lang } = useLanguage()
   const [stops, setStops] = useLocalStorage(STORAGE_KEY, [])
   const [departureCount, setDepartureCount] = useLocalStorage(
     DEPARTURE_COUNT_KEY,
@@ -26,7 +30,7 @@ export default function App() {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [addMode, setAddMode] = useState('search') // 'search' | 'map'
   const [sharedTrip, setSharedTrip] = useState(() => parseTripLink())
-  const { alerts, error: alertsError, loading: alertsLoading } = useAlerts()
+  const { alerts, error: alertsError, loading: alertsLoading } = useAlerts(lang)
   const stopIds = stops.map((s) => s.gtfsId)
   const selectedStopIds = new Set(stopIds)
   const { routeNames: selectedRouteNames } = useStopRoutes(stopIds)
@@ -72,25 +76,26 @@ export default function App() {
         <div className="app__header-content">
           <div>
             <h1>
-              <span aria-hidden="true">🚋</span> Paikallisliikenne
+              <span aria-hidden="true">🚋</span> {t('app.heading')}
             </h1>
-            <p className="app__subtitle">
-              Reaaliaikaiset Nysse-lähdöt — valitse jopa {MAX_STOPS} pysäkkiä.
-            </p>
+            <p className="app__subtitle">{t('app.subtitle', [MAX_STOPS])}</p>
           </div>
-          <button
-            className="app__about-btn"
-            onClick={() => setAboutOpen(true)}
-            aria-label="Tietoja sovelluksesta"
-            title="Tietoja sovelluksesta"
-          >
-            ℹ️
-          </button>
+          <div className="app__header-actions">
+            <LanguageSwitch />
+            <button
+              className="app__about-btn"
+              onClick={() => setAboutOpen(true)}
+              aria-label={t('app.aboutButton')}
+              title={t('app.aboutButton')}
+            >
+              ℹ️
+            </button>
+          </div>
         </div>
       </header>
 
       <section className="controls">
-        <div className="controls__tabs" role="tablist" aria-label="Pysäkin lisäystapa">
+        <div className="controls__tabs" role="tablist" aria-label={t('app.addModeLabel')}>
           <button
             type="button"
             role="tab"
@@ -98,7 +103,7 @@ export default function App() {
             className={`controls__tab${addMode === 'search' ? ' controls__tab--active' : ''}`}
             onClick={() => setAddMode('search')}
           >
-            <span aria-hidden="true">🔍</span> Haku
+            <span aria-hidden="true">🔍</span> {t('app.tab.search')}
           </button>
           <button
             type="button"
@@ -107,7 +112,7 @@ export default function App() {
             className={`controls__tab${addMode === 'map' ? ' controls__tab--active' : ''}`}
             onClick={() => setAddMode('map')}
           >
-            <span aria-hidden="true">🗺️</span> Kartta
+            <span aria-hidden="true">🗺️</span> {t('app.tab.map')}
           </button>
         </div>
 
@@ -115,11 +120,7 @@ export default function App() {
           <StopSearch
             onSelect={addStop}
             disabled={isFull}
-            disabledReason={
-              isFull
-                ? `Maksimimäärä (${MAX_STOPS}) pysäkkiä lisätty. Poista jokin ennen uutta.`
-                : null
-            }
+            disabledReason={isFull ? t('app.stopsFull', [MAX_STOPS]) : null}
           />
         ) : (
           <StopMap
@@ -131,10 +132,10 @@ export default function App() {
 
         <div className="controls__row">
           <p className="controls__count">
-            {stops.length} / {MAX_STOPS} pysäkkiä
+            {t('app.stopCount', [stops.length, MAX_STOPS])}
           </p>
           <div className="controls__departures">
-            <label htmlFor="departure-count">Lähtöjä per pysäkki</label>
+            <label htmlFor="departure-count">{t('app.departureCount')}</label>
             <select
               id="departure-count"
               value={departureCount}
@@ -160,8 +161,8 @@ export default function App() {
 
       {stops.length === 0 ? (
         <div className="empty-state">
-          <p>Ei vielä pysäkkejä.</p>
-          <p>Etsi pysäkki yltä ja lisää se klikkaamalla tulosta.</p>
+          <p>{t('app.empty.title')}</p>
+          <p>{t('app.empty.hint')}</p>
         </div>
       ) : (
         <div className="stop-grid">
@@ -193,30 +194,22 @@ export default function App() {
 
       <footer className="app__footer">
         <p>
-          Tiedot: © <a
-            href="https://digitransit.fi/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Digitransit
-          </a>{' '}
-          {new Date().getFullYear()}/{' '}
-          <a
-            href="https://www.nysse.fi/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Nysse (Tampere)
-          </a>
-          . Aineistolisenssi{' '}
-          <a
-            href="https://creativecommons.org/licenses/by/4.0/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            CC BY 4.0
-          </a>
-          .
+          {t('app.footer', [
+            <a href="https://digitransit.fi/" target="_blank" rel="noreferrer">
+              Digitransit
+            </a>,
+            new Date().getFullYear(),
+            <a href="https://www.nysse.fi/" target="_blank" rel="noreferrer">
+              Nysse (Tampere)
+            </a>,
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              CC BY 4.0
+            </a>
+          ])}
         </p>
       </footer>
     </div>
